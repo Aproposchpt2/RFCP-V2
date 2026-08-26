@@ -114,9 +114,49 @@
   function = "rfcp-dashboard-enhancements"
 
 [[edge_functions]]
+  path = "/apropos"
+  function = "rfcp-legacy-brand-cleanup"
+
+[[edge_functions]]
   path = "/ag-dashboard.html"
   function = "rfcp-dashboard-agency-cleanup"
 
 [[edge_functions]]
   path = "/ag-dashboard.html"
   function = "rfcp-dashboard-enhancements"
+
+[[edge_functions]]
+  path = "/ag-dashboard.html"
+  function = "rfcp-legacy-brand-cleanup"
+
+[[edge_functions]]
+  path = "/onboarding"
+  function = "rfcp-legacy-brand-cleanup"
+
+[[edge_functions]]
+  path = "/onboarding.html"
+  function = "rfcp-legacy-brand-cleanup"
+
+[[edge_functions]]
+  path = "/signin"
+  function = "rfcp-legacy-brand-cleanup"
+
+[[edge_functions]]
+  path = "/login"
+  function = "rfcp-legacy-brand-cleanup"
+
+[[edge_functions]]
+  path = "/login.html"
+  function = "rfcp-legacy-brand-cleanup"
+
+[[edge_functions]]
+  path = "/member-login"
+  function = "rfcp-legacy-brand-cleanup"
+
+[[edge_functions]]
+  path = "/member-home"
+  function = "rfcp-legacy-brand-cleanup"
+
+[[edge_functions]]
+  path = "/member-home.html"
+  function = "rfcp-legacy-brand-cleanup"
