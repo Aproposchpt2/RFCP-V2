@@ -120,3 +120,11 @@
 [[edge_functions]]
   path = "/ag-dashboard.html"
   function = "rfcp-dashboard-enhancements"
+
+[[edge_functions]]
+  path = "/analyze-fit"
+  function = "rfcp-analyze-fit-actions"
+
+[[edge_functions]]
+  path = "/analyze-fit.html"
+  function = "rfcp-analyze-fit-actions"
