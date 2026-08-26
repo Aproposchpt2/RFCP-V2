@@ -1,0 +1,1441 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Opportunity Pipeline — NGCC</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital@0;1&family=Cormorant+Garamond:ital@1&family=Jost:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0A1A3A;--surface:#0f2244;--line:rgba(91,175,255,.15);--line2:rgba(91,175,255,.28);--text:#f0f6ff;--muted:#8facd0;--soft:#5a7899;--gold:#d9a45b;--green:#2ecc8a;--amber:#f0a500;--red:#e05555;--cyan:#5BD3FF}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;line-height:1.6;font-family:Arial,Helvetica,sans-serif}
+
+/* ── Header ── */
+header{background:var(--surface);border-bottom:1px solid var(--line);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.brand{display:flex;align-items:center;gap:12px}
+.brand-mark{width:40px;height:40px;border-radius:10px;background:var(--bg);border:1px solid var(--line2);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:14px;color:var(--cyan)}
+.brand-name{font-size:1rem;font-weight:700;color:var(--text)}
+.brand-sub{font-size:.72rem;color:var(--muted)}
+.header-right{display:flex;align-items:center;gap:12px}
+.signout-btn{background:transparent;border:1px solid var(--line);border-radius:7px;color:var(--soft);padding:5px 12px;cursor:pointer;font-size:.74rem}
+.signout-btn:hover{border-color:var(--red);color:var(--red)}
+
+/* ── Tabs ── */
+.mkt-tabs{display:flex;border-bottom:2px solid var(--line);padding:0 28px;background:var(--surface)}
+.mkt-tab{display:flex;align-items:center;gap:8px;padding:13px 20px;font-size:.74rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--soft);border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:.18s}
+.mkt-tab:hover{color:var(--text)}
+.mkt-tab.active{color:var(--cyan);border-bottom-color:var(--cyan)}
+.tab-dot{width:7px;height:7px;border-radius:50%}
+.tab-count{font-size:.6rem;background:rgba(255,255,255,.1);border-radius:999px;padding:2px 7px}
+.mkt-tab.active .tab-count{background:rgba(91,211,255,.2);color:var(--cyan)}
+
+/* ── Page ── */
+.page{max-width:1240px;margin:0 auto;padding:24px 20px}
+
+/* ── Entity card ── */
+.entity-card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 22px;margin-bottom:20px;display:flex;flex-wrap:wrap;gap:20px;align-items:center}
+.ef-label{font-size:.62rem;text-transform:uppercase;letter-spacing:.1em;color:var(--soft);margin-bottom:3px}
+.ef-value{font-size:.9rem;font-weight:700;color:var(--text)}
+.ef-value.active{color:var(--green)}
+
+/* ── Stat bar ── */
+.stat-bar{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 16px;min-width:100px}
+.stat-val{font-size:1.5rem;font-weight:900;line-height:1;color:var(--text)}
+.stat-val.red{color:var(--red)}.stat-val.amber{color:var(--amber)}.stat-val.green{color:var(--green)}
+.stat-label{font-size:.62rem;text-transform:uppercase;letter-spacing:.08em;color:var(--soft);margin-top:4px}
+
+/* ── NAICS ribbon ── */
+.naics-ctrl-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+.naics-ctrl-btn{background:rgba(255,255,255,.05);border:1px solid var(--line);color:var(--muted);padding:4px 11px;border-radius:6px;font-size:.72rem;font-weight:700;cursor:pointer;transition:.15s}
+.naics-ctrl-btn:hover,.naics-ctrl-btn.on{border-color:var(--cyan);color:var(--cyan);background:rgba(91,211,255,.08)}
+.naics-ribbon{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}
+.naics-bubble{position:relative;display:inline-flex;flex-direction:column;align-items:center;gap:2px;padding:7px 13px;border-radius:20px;cursor:pointer;border:1px solid var(--line);background:rgba(255,255,255,.04);transition:.18s;user-select:none}
+.naics-bubble:hover{border-color:var(--cyan);background:rgba(91,211,255,.08)}
+.naics-bubble.on{background:rgba(91,211,255,.15);border-color:var(--cyan)}
+.naics-bubble.on .nb-code{color:var(--cyan)}
+.naics-bubble.off{opacity:.35;border-color:transparent}
+.nb-code{font-size:.75rem;font-weight:900;color:var(--muted);letter-spacing:.04em;line-height:1}
+.nb-tip{position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:#0a1a34;border:1px solid var(--cyan);border-radius:8px;padding:7px 11px;font-size:.72rem;color:#e0f0ff;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .15s;z-index:200;box-shadow:0 6px 20px rgba(0,0,0,.5)}
+.nb-tip::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:#0a1a34}
+.naics-bubble:hover .nb-tip{opacity:1}
+
+/* ── Controls row ── */
+.controls{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px;align-items:center}
+.ctrl-input,.ctrl-select{background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:8px;color:var(--text);padding:8px 12px;font-size:.84rem;outline:none}
+.ctrl-input:focus,.ctrl-select:focus{border-color:var(--cyan)}
+.ctrl-input{flex:1;min-width:180px}
+.win-btns{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.win-btn{background:rgba(255,255,255,.04);border:none;border-right:1px solid var(--line);color:var(--muted);padding:8px 14px;font-size:.78rem;font-weight:700;cursor:pointer;transition:.18s;white-space:nowrap}
+.win-btn:last-child{border-right:none}
+.win-btn:hover{background:rgba(91,211,255,.08);color:var(--text)}
+.win-btn.on{background:rgba(91,211,255,.18);color:var(--cyan)}
+.count-lbl{font-size:.8rem;color:var(--muted);margin-left:auto}
+
+/* ── Table ── */
+.tbl-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px}
+table{width:100%;min-width:900px;border-collapse:collapse;background:var(--surface)}
+th{font-size:.64rem;text-transform:uppercase;letter-spacing:.1em;color:var(--soft);padding:11px 14px;text-align:left;border-bottom:1px solid var(--line);background:rgba(255,255,255,.03);white-space:nowrap}
+td{padding:11px 14px;border-bottom:1px solid rgba(91,175,255,.07);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(91,175,255,.04)}
+.t-title{background:none;border:none;color:var(--text);text-align:left;font-weight:600;font-size:.88rem;cursor:pointer;padding:0;line-height:1.35;font-family:Arial,sans-serif}
+.t-title:hover{color:var(--cyan);text-decoration:underline;text-underline-offset:3px}
+.chip{display:inline-block;padding:2px 8px;border-radius:4px;font-size:.66rem;font-weight:700}
+.chip-naics{background:rgba(91,211,255,.1);border:1px solid rgba(91,211,255,.22);color:var(--cyan)}
+.chip-rfp{background:rgba(91,175,255,.15);color:#82b8ff}
+.chip-rfq{background:rgba(144,238,144,.12);color:#90ee90}
+.chip-ss{background:rgba(240,165,0,.12);color:var(--amber)}
+.chip-rfi{background:rgba(169,147,255,.14);color:#c0a8ff}
+.chip-other{background:rgba(255,255,255,.07);color:var(--muted)}
+.badge{display:inline-block;padding:4px 9px;border-radius:6px;font-size:.72rem;font-weight:700}
+.badge-hot{background:rgba(224,85,85,.2);color:#ff9999;border:1px solid rgba(224,85,85,.35)}
+.badge-warm{background:rgba(240,165,0,.15);color:#ffc96b;border:1px solid rgba(240,165,0,.3)}
+.badge-ok{background:rgba(46,204,138,.12);color:#7eedc0;border:1px solid rgba(46,204,138,.28)}
+.badge-none{background:rgba(255,255,255,.05);color:var(--soft);border:1px solid var(--line)}
+.analyze-btn{background:#fff;color:#0F2A6A;border:none;padding:5px 11px;border-radius:7px;font-size:.7rem;font-weight:700;cursor:pointer;white-space:nowrap;transition:.15s}
+.analyze-btn:hover{background:#e8f0ff}
+.fit-badge{display:inline-block;font-size:.6rem;font-weight:700;padding:2px 6px;border-radius:4px;margin-left:6px;vertical-align:middle}
+.fit-badge.bid{background:#6EE7A8;color:#0F2A6A}
+.fit-badge.conditional{background:#F59E0B;color:#0F2A6A}
+.fit-badge.no_bid{background:rgba(248,113,113,.18);color:#F87171;border:1px solid rgba(248,113,113,.28)}
+.empty-row{text-align:center;padding:52px;color:var(--soft)}
+
+/* ── Mobile cards ── */
+.cards{display:none;flex-direction:column;gap:10px}
+.opp-card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px}
+.opp-card-title{font-weight:700;font-size:.92rem;margin-bottom:4px;background:none;border:none;color:var(--text);cursor:pointer;text-align:left;padding:0;font-family:Arial,sans-serif;width:100%}
+.opp-card-title:hover{color:var(--cyan)}
+.opp-card-agency{font-size:.76rem;color:var(--muted);margin-bottom:8px}
+.opp-card-row{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+
+/* ── Coming soon ── */
+.coming-soon{border:1px solid rgba(240,165,0,.2);border-radius:14px;padding:48px 32px;background:linear-gradient(135deg,rgba(240,165,0,.04),rgba(255,255,255,.02));display:flex;flex-direction:column;align-items:center;text-align:center;gap:14px;max-width:520px;margin:40px auto}
+.cs-tag{font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;color:var(--amber);font-weight:600;border:1px solid rgba(240,165,0,.3);border-radius:999px;padding:4px 14px}
+.cs-title{font-family:'Bodoni Moda',serif;font-size:1.8rem;color:var(--text);font-weight:400}
+
+/* ── Contract detail drawer ── */
+#cd-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.52);z-index:800}
+#cd-overlay.open{display:block}
+#cd-drawer{position:fixed;top:0;right:0;width:min(520px,100vw);height:100vh;background:#071e38;color:#fff;z-index:801;transform:translateX(110%);transition:transform .3s cubic-bezier(.4,0,.2,1);overflow-y:auto;box-shadow:-6px 0 40px rgba(0,0,0,.5)}
+#cd-drawer.open{transform:translateX(0)}
+.cd-inner{padding:22px 26px 60px}
+.cd-close{position:fixed;top:14px;right:14px;z-index:802;background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.22);border-radius:8px;color:#fff;font-size:1.1rem;cursor:pointer;padding:5px 11px}
+.cd-eye{font-size:.6rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:rgba(91,211,255,.6);margin-bottom:8px}
+.cd-title{font-family:'Bodoni Moda',serif;font-size:1.1rem;color:#fff;font-weight:600;line-height:1.3;margin-bottom:6px;padding-right:52px}
+.cd-agency{font-size:.8rem;color:rgba(255,255,255,.5);margin-bottom:16px}
+.cd-chips{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:16px}
+.cd-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}
+.cd-item{background:rgba(255,255,255,.06);border-radius:10px;padding:12px 14px;border:1px solid rgba(255,255,255,.08)}
+.cd-item-lbl{font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.38);margin-bottom:4px}
+.cd-item-val{font-size:.88rem;color:#fff;font-weight:600}
+.cd-desc-lbl{font-size:.62rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.38);margin-bottom:8px}
+.cd-desc{font-size:.86rem;color:rgba(255,255,255,.65);line-height:1.75;margin-bottom:28px;border-left:2px solid rgba(91,211,255,.3);padding-left:14px}
+.cd-cta-box{background:linear-gradient(135deg,rgba(217,164,91,.12),rgba(217,164,91,.04));border:1px solid rgba(217,164,91,.4);border-radius:14px;padding:20px 22px;text-align:center}
+.cd-cta-lbl{font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:rgba(217,164,91,.7);font-weight:700;margin-bottom:6px}
+.cd-cta-desc{font-size:.8rem;color:rgba(255,255,255,.5);margin-bottom:16px;line-height:1.55}
+.cd-cta-btn{background:linear-gradient(135deg,#d9a45b,#e8c96a);color:#0F2A6A;border:none;border-radius:999px;font-size:.8rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;padding:14px 32px;width:100%;cursor:pointer;transition:.2s}
+.cd-cta-btn:hover{filter:brightness(1.08);transform:translateY(-2px)}
+
+/* ── Analyze Fit drawer ── */
+#fit-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.52);z-index:900}
+#fit-overlay.open{display:block}
+#fit-drawer{position:fixed;top:0;right:0;width:min(520px,100vw);height:100vh;background:#0F2A6A;color:#fff;z-index:901;transform:translateX(110%);transition:transform .32s cubic-bezier(.4,0,.2,1);overflow-y:auto;box-shadow:-6px 0 40px rgba(0,0,0,.5)}
+#fit-drawer.open{transform:translateX(0)}
+.fit-inner{padding:22px 26px 56px}
+.fit-close{position:fixed;top:14px;right:14px;z-index:902;background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.22);border-radius:8px;color:#fff;font-size:1.1rem;cursor:pointer;padding:5px 11px}
+.fit-close:hover{background:rgba(255,255,255,.22)}
+.fit-opp-title{font-weight:700;font-size:.96rem;color:#fff;margin-bottom:3px;padding-right:58px;line-height:1.35}
+.fit-opp-agency{font-size:.76rem;color:rgba(255,255,255,.48);margin-bottom:20px}
+.fit-hero{display:flex;align-items:center;gap:16px;background:rgba(255,255,255,.08);border-radius:14px;padding:14px 18px;margin-bottom:20px}
+.fit-score{font-size:2.8rem;font-weight:900;line-height:1}
+.fit-score.bid,.fit-score.conditional_bid{color:#6EE7A8}
+.fit-score.no_bid{color:#F87171}
+.fit-score.review{color:#F59E0B}
+.rec-badge{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;padding:3px 9px;border-radius:5px;display:inline-block;margin-top:5px}
+.rec-badge.bid,.rec-badge.conditional_bid{background:#6EE7A8;color:#0F2A6A}
+.rec-badge.no_bid{background:rgba(248,113,113,.22);color:#F87171;border:1px solid rgba(248,113,113,.38)}
+.rec-badge.review{background:#F59E0B;color:#0F2A6A}
+.fit-match-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:20px}
+.fit-match-item{background:rgba(255,255,255,.07);border-radius:10px;padding:10px 8px;text-align:center}
+.fit-match-icon{font-size:1.1rem;margin-bottom:3px}
+.fit-match-label{font-size:.58rem;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.4);margin-bottom:2px}
+.fit-match-val{font-size:.76rem;font-weight:600;color:#fff}
+.fit-section{margin-bottom:18px}
+.fit-h{font-family:'Bodoni Moda',serif;font-size:.98rem;font-weight:700;color:#fff;margin-bottom:2px}
+.fit-rule{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:.76rem;color:rgba(255,255,255,.36);display:block;margin-bottom:8px}
+.fit-text{font-size:.83rem;color:rgba(255,255,255,.8);line-height:1.6}
+.fit-list{list-style:none;display:flex;flex-direction:column;gap:5px}
+.fit-list li{font-size:.82rem;color:rgba(255,255,255,.8);padding-left:14px;position:relative;line-height:1.45}
+.fit-list li::before{content:'›';position:absolute;left:0;color:#6EE7A8;font-weight:700}
+.fit-acc{border:1px solid rgba(255,255,255,.1);border-radius:12px;overflow:hidden;margin-bottom:18px}
+.fit-acc-item{border-bottom:1px solid rgba(255,255,255,.07)}
+.fit-acc-item:last-child{border-bottom:none}
+.fit-acc-head{font-size:.84rem;font-weight:600;color:rgba(255,255,255,.8);padding:11px 16px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;background:rgba(255,255,255,.04);user-select:none}
+.fit-acc-head:hover{background:rgba(255,255,255,.08)}
+.fit-acc-head.open{color:#6EE7A8}
+.fit-acc-body{display:none;padding:10px 16px 14px;background:rgba(255,255,255,.025)}
+.fit-acc-body.open{display:block}
+.fit-checklist{display:flex;flex-direction:column;gap:8px}
+.fit-check{display:flex;align-items:flex-start;gap:9px;cursor:pointer}
+.fit-check input{margin-top:3px;accent-color:#6EE7A8;flex-shrink:0}
+.fit-check-text{font-size:.82rem;color:rgba(255,255,255,.8);line-height:1.4}
+.fit-footer{display:flex;gap:10px;margin-top:22px;flex-wrap:wrap}
+.fit-btn-sam{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.2);font-size:.78rem;font-weight:600;padding:8px 15px;border-radius:8px;text-decoration:none;display:inline-block;cursor:pointer;transition:.15s}
+.fit-btn-sam:hover{background:rgba(255,255,255,.18)}
+.fit-btn-propose{background:#d9a45b;color:#0F2A6A;border:none;font-size:.78rem;font-weight:800;padding:8px 15px;border-radius:8px;text-decoration:none;display:inline-block;cursor:pointer;transition:.15s}
+.fit-btn-propose:hover{filter:brightness(1.08)}
+/* ── Proposal panel (inline in fit drawer) ── */
+#proposal-panel{margin-top:24px;border-top:1px solid rgba(255,255,255,.12);padding-top:20px;display:none}
+#proposal-panel.open{display:block}
+.prop-header{margin-bottom:14px}
+.prop-title{font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:700;color:#fff;margin-bottom:2px}
+.prop-sub{font-size:.72rem;color:rgba(255,255,255,.45);letter-spacing:.08em;text-transform:uppercase}
+.prop-messages{background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:14px;min-height:120px;max-height:380px;overflow-y:auto;display:flex;flex-direction:column;gap:12px;margin-bottom:12px}
+.prop-msg-user{background:rgba(255,255,255,.08);border-radius:10px 10px 3px 10px;padding:10px 13px;font-size:.88rem;color:rgba(255,255,255,.9);align-self:flex-end;max-width:88%;line-height:1.5}
+.prop-msg-ai{background:rgba(15,42,106,.5);border:1px solid rgba(91,174,255,.15);border-radius:10px 10px 10px 3px;padding:12px 14px;font-size:.88rem;color:rgba(235,245,255,.9);align-self:flex-start;max-width:96%;line-height:1.65;white-space:pre-wrap}
+.prop-msg-ai strong{color:#fff}
+.prop-thinking{color:rgba(255,255,255,.38);font-size:.8rem;font-style:italic;align-self:flex-start;padding:6px 2px}
+.prop-input-row{display:flex;gap:8px;align-items:flex-end}
+#proposal-input{flex:1;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.2);border-radius:10px;color:#fff;font-family:inherit;font-size:.88rem;padding:10px 13px;resize:none;min-height:42px;max-height:120px;outline:none;transition:.15s;line-height:1.5}
+#proposal-input:focus{border-color:rgba(217,164,91,.6);background:rgba(255,255,255,.1)}
+#proposal-send{background:#d9a45b;color:#0F2A6A;border:none;border-radius:10px;font-weight:800;font-size:.82rem;padding:10px 16px;cursor:pointer;white-space:nowrap;transition:.15s;height:42px}
+#proposal-send:hover{filter:brightness(1.1)}
+#proposal-send:disabled{opacity:.5;cursor:not-allowed}
+.fit-loading{text-align:center;padding:60px 20px;color:rgba(255,255,255,.45);font-size:.9rem}
+.fit-error{padding:18px;color:#F87171;font-size:.84rem;background:rgba(248,113,113,.1);border-radius:10px;margin-top:12px}
+.fit-spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.18);border-top-color:#6EE7A8;border-radius:50%;animation:spin .8s linear infinite;vertical-align:middle;margin-right:6px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── Auth gate ── */
+#auth-gate{display:none;position:fixed;inset:0;background:radial-gradient(circle at top,#123878,#06111d 54%,#020711);z-index:999;align-items:center;justify-content:center;padding:24px}
+.auth-card{width:min(420px,100%);background:rgba(15,42,106,.92);border:1px solid rgba(255,255,255,.15);border-radius:18px;box-shadow:0 32px 90px rgba(0,0,0,.4);padding:34px}
+.auth-brand{font-family:'Bodoni Moda',serif;color:#fff;font-size:1.35rem;letter-spacing:.04em;margin-bottom:6px}
+.auth-eye{font-size:.68rem;letter-spacing:.2em;text-transform:uppercase;color:#C9A84C;font-weight:700;margin-bottom:20px}
+.auth-h1{font-family:'Bodoni Moda',serif;font-size:1.8rem;line-height:1.06;color:#fff;margin-bottom:10px}
+.auth-sub{font-size:.9rem;line-height:1.6;margin-bottom:20px;color:rgba(255,255,255,.6)}
+.auth-label{display:block;font-size:.62rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:7px}
+.auth-input{width:100%;font-size:1rem;color:#fff;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:13px 14px;margin-bottom:14px;outline:none;font-family:Arial,sans-serif}
+.auth-input:focus{border-color:#C9A84C}
+.auth-code{letter-spacing:.32em;text-align:center;font-size:1.22rem}
+.auth-btn{width:100%;background:linear-gradient(135deg,#fff,#C9A84C);color:#0F2A6A;border:none;border-radius:999px;font-size:.78rem;font-weight:800;letter-spacing:.16em;text-transform:uppercase;padding:14px;cursor:pointer;transition:.2s}
+.auth-btn:hover{filter:brightness(1.06)}
+.auth-btn:disabled{opacity:.6;cursor:wait}
+.auth-msg{margin-top:12px;font-size:.88rem;text-align:center;display:none}
+.auth-msg.err{display:block;color:#F87171}
+.auth-msg.ok{display:block;color:#6EE7A8}
+.auth-back{background:none;border:none;color:rgba(255,255,255,.4);cursor:pointer;font-size:.76rem;margin-top:14px;text-decoration:underline;font-family:Arial,sans-serif}
+.auth-fine{font-size:.72rem;color:rgba(255,255,255,.28);text-align:center;margin-top:18px;line-height:1.5;font-style:italic;font-family:'Cormorant Garamond',serif}
+
+/* ── Nevada bids ── */
+.nv-card{border:1px solid var(--line);border-radius:10px;padding:14px 16px;background:var(--surface);margin-bottom:8px;transition:.16s;cursor:pointer}
+.nv-card:hover{background:rgba(255,255,255,.06);border-color:var(--cyan)}
+.nv-title{font-size:.9rem;font-weight:700;color:var(--text);margin-bottom:4px;background:none;border:none;cursor:pointer;text-align:left;padding:0;font-family:Arial,sans-serif;width:100%}
+.nv-title:hover{color:var(--cyan)}
+.nv-meta{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px;font-size:.76rem;color:var(--muted)}
+.nv-actions{display:flex;justify-content:space-between;align-items:center}
+.nv-view{font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;font-weight:700;border:1px solid var(--line);border-radius:6px;padding:5px 12px;background:rgba(255,255,255,.04);color:var(--muted);text-decoration:none;transition:.15s}
+.nv-view:hover{border-color:var(--line2);color:var(--text)}
+/* ── Nevada bid drawer ── */
+#nvd-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.52);z-index:900}
+#nvd-overlay.open{display:block}
+#nvd-drawer{position:fixed;top:0;right:0;width:min(520px,100vw);height:100vh;background:#071e38;color:#fff;z-index:901;transform:translateX(110%);transition:transform .3s cubic-bezier(.4,0,.2,1);overflow-y:auto;box-shadow:-6px 0 40px rgba(0,0,0,.5)}
+#nvd-drawer.open{transform:translateX(0)}
+.nvd-inner{padding:28px 26px 40px}
+.nvd-close{position:absolute;top:18px;right:20px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.7);width:32px;height:32px;border-radius:50%;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s}
+.nvd-close:hover{background:rgba(255,255,255,.18);color:#fff}
+.nvd-eyebrow{font-size:.62rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#34d399;margin-bottom:10px}
+.nvd-title{font-family:'Bodoni Moda',Georgia,serif;font-size:1.25rem;font-weight:600;color:#fff;line-height:1.3;margin-bottom:16px}
+.nvd-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+.nvd-chip{font-size:.72rem;font-weight:700;padding:4px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.06);color:rgba(255,255,255,.8)}
+.nvd-chip.type-rfp{border-color:rgba(91,211,255,.4);background:rgba(91,211,255,.1);color:#5bd3ff}
+.nvd-chip.type-bid{border-color:rgba(245,195,107,.4);background:rgba(245,195,107,.1);color:#f5c36b}
+.nvd-chip.urgent{border-color:rgba(248,113,113,.4);background:rgba(248,113,113,.1);color:#f87171}
+.nvd-chip.soon{border-color:rgba(245,195,107,.4);background:rgba(245,195,107,.1);color:#f5c36b}
+.nvd-chip.ok{border-color:rgba(52,211,153,.4);background:rgba(52,211,153,.1);color:#34d399}
+.nvd-section{margin-bottom:18px}
+.nvd-label{font-size:.6rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:6px}
+.nvd-value{font-size:.92rem;color:rgba(255,255,255,.85);line-height:1.5}
+.nvd-divider{border:none;border-top:1px solid rgba(255,255,255,.08);margin:18px 0}
+.nvd-portal-btn{display:inline-flex;align-items:center;gap:7px;font-size:.72rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.6);border:1px solid rgba(255,255,255,.2);border-radius:8px;padding:9px 18px;text-decoration:none;transition:.15s;background:rgba(255,255,255,.04)}
+.nvd-portal-btn:hover{border-color:rgba(255,255,255,.4);color:#fff;background:rgba(255,255,255,.08)}
+
+/* ── Responsive ── */
+@media(max-width:700px){.tbl-wrap table{display:none}.cards{display:flex}header{flex-direction:column;align-items:flex-start;padding:12px 16px}.page{padding:14px}.stat-bar{grid-template-columns:1fr 1fr;display:grid}header .brand-sub{display:none}}
+</style>
+</head>
+<body>
+
+<!-- Auth gate -->
+<div id="auth-gate">
+  <div class="auth-card">
+    <div class="auth-brand">NGCC</div>
+    <div class="auth-eye">National Government Contract Center</div>
+    <div id="auth-step1">
+      <h1 class="auth-h1">Access your dashboard.</h1>
+      <p class="auth-sub">Enter your registered business email for a secure one-time access code.</p>
+      <label class="auth-label" for="auth-email">Business Email</label>
+      <input class="auth-input" type="email" id="auth-email" autocomplete="email" placeholder="you@yourbusiness.com">
+      <button class="auth-btn" id="auth-send-btn">Send My Access Code →</button>
+      <div class="auth-msg" id="auth-msg1"></div>
+    </div>
+    <div id="auth-step2" style="display:none">
+      <h1 class="auth-h1">Enter your code.</h1>
+      <p class="auth-sub">Sent to <strong style="color:#fff" id="auth-email-show"></strong> — expires in 15 minutes.</p>
+      <label class="auth-label" for="auth-code">6-digit code</label>
+      <input class="auth-input auth-code" type="text" id="auth-code" inputmode="numeric" maxlength="6" placeholder="· · · · · ·">
+      <button class="auth-btn" id="auth-verify-btn">Open My Dashboard →</button>
+      <div class="auth-msg" id="auth-msg2"></div>
+      <button class="auth-back" id="auth-back-btn">← Use a different email</button>
+    </div>
+    <p class="auth-fine">Sourced from official public records. For registered business use only.</p>
+  </div>
+</div>
+
+<!-- Main app -->
+<div id="app" style="display:none">
+
+<header>
+  <div class="brand">
+    <div class="brand-mark">AG</div>
+    <div>
+      <div class="brand-name" id="hdr-biz">APROPOS GROUP LLC</div>
+      <div class="brand-sub">Federal Contract Pipeline · NGCC</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <span style="font-size:.72rem;color:var(--soft)" id="hdr-uei"></span>
+    <button class="signout-btn" id="signout-btn">Sign out</button>
+  </div>
+</header>
+
+<!-- Tabs -->
+<nav class="mkt-tabs">
+  <button class="mkt-tab active" data-tab="federal">
+    <span class="tab-dot" style="background:var(--cyan)"></span>🇺🇸 Federal
+    <span class="tab-count" id="tab-fed-count">—</span>
+  </button>
+  <button class="mkt-tab" data-tab="nevada">
+    <span class="tab-dot" style="background:#34d399"></span>◆ Nevada State
+    <span class="tab-count" id="tab-nv-count">—</span>
+  </button>
+  <button class="mkt-tab" data-tab="california">
+    <span class="tab-dot" style="background:var(--amber)"></span>☀ California
+    <span class="tab-count">Soon</span>
+  </button>
+</nav>
+
+<!-- Federal panel -->
+<div id="panel-federal">
+<div class="page">
+  <div class="entity-card" id="entity-card">
+    <div><div class="ef-label">SAM Status</div><div class="ef-value active">● Active</div></div>
+    <div><div class="ef-label">Business</div><div class="ef-value" id="ec-biz">—</div></div>
+    <div><div class="ef-label">UEI</div><div class="ef-value" id="ec-uei">—</div></div>
+    <div><div class="ef-label">NAICS Codes</div><div class="ef-value" id="ec-naics-count">—</div></div>
+    <div><div class="ef-label">Last Refresh</div><div class="ef-value" id="ec-refresh">—</div></div>
+    <div style="margin-left:auto"><button onclick="loadFederal()" style="background:var(--cyan);color:#0A1A3A;border:none;border-radius:8px;padding:9px 18px;font-weight:700;cursor:pointer;font-size:.82rem">Refresh Pipeline</button></div>
+  </div>
+
+  <div class="stat-bar">
+    <div class="stat"><div class="stat-val red" id="stat-hot">—</div><div class="stat-label">Due &lt; 7 days</div></div>
+    <div class="stat"><div class="stat-val amber" id="stat-warm">—</div><div class="stat-label">Due 7–30 days</div></div>
+    <div class="stat"><div class="stat-val green" id="stat-ok">—</div><div class="stat-label">Due 30+ days</div></div>
+    <div class="stat"><div class="stat-val" id="stat-total">—</div><div class="stat-label">Total Opps</div></div>
+  </div>
+
+  <p style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:.82rem;color:rgba(255,255,255,.3);margin-bottom:14px">Opportunities sourced from official public records.</p>
+
+  <div class="naics-ctrl-row">
+    <span style="font-size:.62rem;text-transform:uppercase;letter-spacing:.1em;color:var(--soft)">NAICS</span>
+    <button class="naics-ctrl-btn on" id="naics-all-btn">Select All</button>
+    <button class="naics-ctrl-btn" id="naics-clear-btn">Clear All</button>
+  </div>
+  <div class="naics-ribbon" id="naics-ribbon"></div>
+
+  <div class="controls">
+    <input class="ctrl-input" id="fed-search" type="text" placeholder="Search by title or agency…">
+    <select class="ctrl-select" id="fed-setaside">
+      <option value="">All Set-Asides</option>
+      <option value="SBA">Small Business</option>
+      <option value="8A">8(a)</option>
+      <option value="WOSB">Women-Owned</option>
+      <option value="SDVOSB">Service-Disabled Veteran</option>
+      <option value="HUBZone">HUBZone</option>
+    </select>
+    <div class="win-btns" id="win-btns">
+      <button class="win-btn on" data-days="0">All</button>
+      <button class="win-btn" data-days="7">7d</button>
+      <button class="win-btn" data-days="14">14d</button>
+      <button class="win-btn" data-days="30">30d</button>
+      <button class="win-btn" data-days="60">60d</button>
+      <button class="win-btn" data-days="90">90d</button>
+    </div>
+    <span class="count-lbl" id="fed-count-lbl"></span>
+  </div>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr>
+        <th>Opportunity</th><th>Agency</th><th>Type</th><th>Set-Aside</th><th>NAICS</th><th>Deadline</th><th></th>
+      </tr></thead>
+      <tbody id="fed-tbody"><tr><td colspan="7" class="empty-row">Loading pipeline…</td></tr></tbody>
+    </table>
+  </div>
+  <div class="cards" id="fed-cards"></div>
+</div>
+</div>
+
+<!-- Nevada panel -->
+<div id="panel-nevada" style="display:none">
+<div class="page">
+
+  <!-- SERVICE SELECTOR -->
+  <div id="nv-service-panel" style="background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:12px;margin-bottom:18px;overflow:hidden">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;cursor:pointer;user-select:none" onclick="toggleNvServicePanel()">
+      <div>
+        <div style="font-size:.62rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--cyan);margin-bottom:3px">My Services</div>
+        <div style="font-size:.88rem;color:var(--text)" id="nv-svc-summary">Select the services your business provides to match Nevada bids</div>
+      </div>
+      <span id="nv-svc-chevron" style="color:var(--muted);font-size:1.1rem;transition:.2s">▸</span>
+    </div>
+    <div id="nv-svc-body" style="display:none;padding:0 18px 18px;border-top:1px solid var(--line)">
+      <div id="nv-categories" style="margin-top:14px"></div>
+      <div style="margin-top:14px;display:flex;gap:10px;align-items:center">
+        <button onclick="applyNvServices()" style="background:var(--cyan);color:#020816;border:none;border-radius:8px;padding:9px 20px;font-size:.78rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;cursor:pointer">Find My Matches</button>
+        <button onclick="clearNvServices()" style="background:rgba(255,255,255,.06);color:var(--muted);border:1px solid var(--line);border-radius:8px;padding:9px 16px;font-size:.78rem;font-weight:600;cursor:pointer">Clear All</button>
+        <span id="nv-svc-save-msg" style="font-size:.78rem;color:var(--green)"></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <input class="ctrl-input" id="nv-search" type="text" placeholder="Search Nevada bids by title or agency…">
+    <select class="ctrl-select" id="nv-type"><option value="">All Types</option><option value="RFP">RFP</option><option value="BID">Bid / IFB</option></select>
+    <span class="count-lbl" id="nv-count-lbl"></span>
+  </div>
+  <div id="nv-cards"><div class="empty-row">Loading Nevada bids…</div></div>
+</div>
+</div>
+
+<!-- California panel -->
+<div id="panel-california" style="display:none">
+<div class="page">
+  <div class="coming-soon">
+    <span class="cs-tag">Coming Soon</span>
+    <h3 class="cs-title">California State Contracts</h3>
+    <p style="color:var(--muted);font-size:.9rem;line-height:1.7;max-width:360px">Open state, county, city, and school district opportunities across California — matched to your business profile. No federal registration required.</p>
+    <a href="https://calstategen.aproposgroupllc.com" target="_blank" rel="noopener" style="display:inline-block;background:linear-gradient(135deg,#fff,#f59e0b 55%,#d97706);color:#1a0a00;font-weight:800;font-size:.82rem;padding:11px 24px;border-radius:8px;text-decoration:none;margin-top:4px">Preview CalStateGen →</a>
+  </div>
+</div>
+</div>
+
+</div><!-- /app -->
+
+<!-- Nevada bid drawer -->
+<div id="nvd-overlay"></div>
+<div id="nvd-drawer">
+  <div class="nvd-inner">
+    <button class="nvd-close" id="nvd-close-btn">✕</button>
+    <div class="nvd-eyebrow">◆ Nevada State Procurement</div>
+    <div class="nvd-title" id="nvd-title"></div>
+    <div class="nvd-row" id="nvd-chips"></div>
+    <div class="nvd-section"><div class="nvd-label">Agency</div><div class="nvd-value" id="nvd-agency"></div></div>
+    <div class="nvd-section"><div class="nvd-label">Solicitation #</div><div class="nvd-value" id="nvd-sol"></div></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px">
+      <div><div class="nvd-label">Issue Date</div><div class="nvd-value" id="nvd-issue"></div></div>
+      <div><div class="nvd-label">Close Date</div><div class="nvd-value" id="nvd-close"></div></div>
+    </div>
+    <hr class="nvd-divider">
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px">
+      <button onclick="analyzeNvBid()" style="flex:1;background:linear-gradient(135deg,#0F2A6A,#1a3a7a);color:#fff;border:1px solid rgba(91,211,255,.35);border-radius:10px;padding:12px 18px;font-size:.78rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:.15s" onmouseover="this.style.borderColor='var(--cyan)'" onmouseout="this.style.borderColor='rgba(91,211,255,.35)'">⚡ Analyze Fit</button>
+      <button onclick="proposeNvBid()" style="flex:1;background:linear-gradient(135deg,#d5aa4d,#e8c982);color:#061b3a;border:none;border-radius:10px;padding:12px 18px;font-size:.78rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:.15s">✍ Develop Proposal</button>
+    </div>
+    <div class="nvd-label" style="margin-bottom:10px">View full solicitation on the Nevada Procurement Portal</div>
+    <a class="nvd-portal-btn" id="nvd-portal-link" href="#" target="_blank" rel="noopener">Open Nevada Portal ↗</a>
+  </div>
+</div>
+
+<!-- Contract detail drawer -->
+<div id="cd-overlay"></div>
+<div id="cd-drawer">
+  <div class="cd-inner">
+    <button class="cd-close" id="cd-close-btn">✕</button>
+    <div class="cd-eye">Contract Opportunity</div>
+    <div class="cd-title" id="cd-title"></div>
+    <div class="cd-agency" id="cd-agency"></div>
+    <div class="cd-chips" id="cd-chips"></div>
+    <div class="cd-grid" id="cd-grid"></div>
+    <div class="cd-desc-lbl">Description</div>
+    <div class="cd-desc" id="cd-desc"></div>
+    <div class="cd-cta-box">
+      <div class="cd-cta-lbl">AI Fit Analysis</div>
+      <div class="cd-cta-desc">Get your personalized fit score, bid/no-bid rationale, pricing guidance, and a step-by-step proposal checklist for this contract.</div>
+      <button class="cd-cta-btn" id="cd-analyze-btn">★ Analyze This Contract →</button>
+    </div>
+  </div>
+</div>
+
+<!-- Analyze Fit drawer -->
+<div id="fit-overlay"></div>
+<div id="fit-drawer">
+  <div class="fit-inner">
+    <button class="fit-close" id="fit-close-btn">✕</button>
+    <div class="fit-opp-title" id="fit-opp-title"></div>
+    <div class="fit-opp-agency" id="fit-opp-agency"></div>
+    <div id="fit-body"><div class="fit-loading"><span class="fit-spinner"></span>Analyzing with AI…</div></div>
+    <div id="proposal-panel">
+      <div class="prop-header" style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap">
+        <div>
+          <div class="prop-title">Proposal Development Agent</div>
+          <div class="prop-sub">Stage 3 · AI-Powered Proposal Writing</div>
+        </div>
+        <a id="generatePackageBtn" href="#" onclick="launchGeneratePackage(event)" style="display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,#d5aa4d,#e8c982);color:#061b3a;font-size:.72rem;font-weight:800;padding:8px 16px;border-radius:999px;text-decoration:none;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;transition:.2s" title="Run the full 4-agent pipeline to generate all 8 proposal sections">⚡ Generate Complete Package</a>
+      </div>
+      <div class="prop-messages" id="prop-messages"></div>
+      <div class="prop-input-row">
+        <textarea id="proposal-input" rows="1" placeholder="Ask the agent to start with the Executive Summary…"></textarea>
+        <button id="proposal-send">Send →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+// ── Constants ─────────────────────────────────────────────────────────────────
+var SB_URL  = 'https://judislfknmhofcgzyozc.supabase.co';
+var SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp1ZGlzbGZrbm1ob2ZjZ3p5b3pjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyMDI3ODAsImV4cCI6MjA5Mjc3ODc4MH0.Kxpe0kJt0k7ZchYu70BOwm4KdT0C5aSsyeR1ov6NlQ0';
+var UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+// ── Session ───────────────────────────────────────────────────────────────────
+function getToken() {
+  return sessionStorage.getItem('pipeline_session') || localStorage.getItem('pipeline_session') || null;
+}
+
+function saveToken(t) {
+  sessionStorage.setItem('pipeline_session', t);
+  localStorage.setItem('pipeline_session', t);
+}
+
+function getEmail() {
+  return localStorage.getItem('capgen_email') || '';
+}
+
+function signOut() {
+  sessionStorage.clear();
+  localStorage.removeItem('pipeline_session');
+  localStorage.removeItem('capgen_email');
+  localStorage.removeItem('capgen_session');
+  window.location.reload();
+}
+
+// ── App state ─────────────────────────────────────────────────────────────────
+var allOpps = [], filteredOpps = [], renderedOpps = [];
+var activeNaics = [];
+var windowDays  = 0;
+var analysisCache = {};
+var currentOpp  = null;
+var currentAnalysisOpp = null;
+var pollTimer   = null;
+var nvAll = [], nvFiltered = [];
+
+// ── Utility ───────────────────────────────────────────────────────────────────
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function fmtDate(d) {
+  if (!d) return '—';
+  try { return new Date(d).toLocaleDateString([],{month:'short',day:'numeric',year:'numeric'}); } catch(_) { return d; }
+}
+
+function daysLeft(deadline) {
+  if (!deadline) return null;
+  return Math.ceil((new Date(deadline) - new Date()) / 864e5);
+}
+
+function urgency(deadline) {
+  var d = daysLeft(deadline);
+  if (d === null) return 'none';
+  if (d < 0) return 'expired';
+  if (d <= 7) return 'hot';
+  if (d <= 30) return 'warm';
+  return 'ok';
+}
+
+function deadlineBadge(deadline) {
+  var d = daysLeft(deadline);
+  var u = urgency(deadline);
+  if (u === 'expired') return '<span class="badge badge-none">Closed</span>';
+  if (u === 'none') return '<span class="badge badge-none">—</span>';
+  var cls = u === 'hot' ? 'badge-hot' : u === 'warm' ? 'badge-warm' : 'badge-ok';
+  var icon = u === 'hot' ? '🔥 ' : u === 'warm' ? '⚡ ' : '';
+  return '<span class="badge ' + cls + '">' + icon + d + 'd · ' + fmtDate(deadline) + '</span>';
+}
+
+function typeChip(t) {
+  var s = (t||'').toLowerCase();
+  var cls = s.includes('rfp') ? 'chip-rfp' : s.includes('rfq') ? 'chip-rfq' : s.includes('rfi') ? 'chip-rfi' : s.includes('award') || s.includes('ss') ? 'chip-ss' : 'chip-other';
+  return '<span class="chip ' + cls + '">' + esc(t||'—') + '</span>';
+}
+
+// ── Startup ───────────────────────────────────────────────────────────────────
+(function start() {
+  var tok = getToken();
+  if (tok) {
+    showApp(getEmail());
+    loadFederal();
+    loadNevada();
+  } else {
+    document.getElementById('auth-gate').style.display = 'flex';
+  }
+})();
+
+function showApp(email) {
+  document.getElementById('auth-gate').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  if (email) {
+    document.getElementById('hdr-biz').textContent = email;
+  }
+}
+
+// ── Tab switching ─────────────────────────────────────────────────────────────
+document.querySelectorAll('.mkt-tab').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.mkt-tab').forEach(function(b) { b.classList.remove('active'); });
+    btn.classList.add('active');
+    ['federal','nevada','california'].forEach(function(p) {
+      document.getElementById('panel-' + p).style.display = btn.dataset.tab === p ? '' : 'none';
+    });
+  });
+});
+
+document.getElementById('signout-btn').addEventListener('click', signOut);
+
+// ── Auth OTP ──────────────────────────────────────────────────────────────────
+var authEmail = '';
+
+document.getElementById('auth-send-btn').addEventListener('click', function() {
+  var m = document.getElementById('auth-msg1');
+  m.className = 'auth-msg'; m.textContent = '';
+  authEmail = document.getElementById('auth-email').value.trim().toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(authEmail)) { m.className = 'auth-msg err'; m.textContent = 'Please enter a valid email.'; return; }
+  var btn = this; btn.disabled = true; btn.textContent = 'Sending…';
+  fetch('/.netlify/functions/pipeline-otp-send', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({email: authEmail}) })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (!d.ok) { m.className = 'auth-msg err'; m.textContent = d.error || 'No account found. Contact support.'; btn.disabled = false; btn.textContent = 'Send My Access Code →'; return; }
+      document.getElementById('auth-email-show').textContent = authEmail;
+      document.getElementById('auth-step1').style.display = 'none';
+      document.getElementById('auth-step2').style.display = 'block';
+      document.getElementById('auth-code').focus();
+    })
+    .catch(function() { m.className = 'auth-msg err'; m.textContent = 'Request failed. Please try again.'; btn.disabled = false; btn.textContent = 'Send My Access Code →'; });
+});
+
+document.getElementById('auth-verify-btn').addEventListener('click', function() {
+  var m = document.getElementById('auth-msg2');
+  m.className = 'auth-msg'; m.textContent = '';
+  var code = document.getElementById('auth-code').value.trim();
+  if (!/^\d{6}$/.test(code)) { m.className = 'auth-msg err'; m.textContent = 'Enter the 6-digit code.'; return; }
+  var btn = this; btn.disabled = true; btn.textContent = 'Opening dashboard…';
+  fetch('/.netlify/functions/pipeline-otp-verify', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({email: authEmail, code: code}) })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (!d.ok) { m.className = 'auth-msg err'; m.textContent = d.error || 'Invalid code. Try again.'; btn.disabled = false; btn.textContent = 'Open My Dashboard →'; return; }
+      var tok = d.session_token || '';
+      if (tok) { saveToken(tok); }
+      localStorage.setItem('capgen_email', authEmail);
+      localStorage.setItem('capgen_session', JSON.stringify(d));
+      m.className = 'auth-msg ok'; m.textContent = 'Verified — opening your dashboard…';
+      setTimeout(function() { showApp(authEmail); loadFederal(); loadNevada(); }, 400);
+    })
+    .catch(function() { m.className = 'auth-msg err'; m.textContent = 'Connection error. Try again.'; btn.disabled = false; btn.textContent = 'Open My Dashboard →'; });
+});
+
+document.getElementById('auth-back-btn').addEventListener('click', function() {
+  document.getElementById('auth-step2').style.display = 'none';
+  document.getElementById('auth-step1').style.display = 'block';
+  document.getElementById('auth-msg1').className = 'auth-msg';
+  document.getElementById('auth-code').value = '';
+});
+
+document.getElementById('auth-email').addEventListener('keydown', function(e) { if (e.key === 'Enter') document.getElementById('auth-send-btn').click(); });
+document.getElementById('auth-code').addEventListener('keydown', function(e) { if (e.key === 'Enter') document.getElementById('auth-verify-btn').click(); });
+
+// ── Federal pipeline ──────────────────────────────────────────────────────────
+function loadFederal() {
+  var tok = getToken();
+  if (!tok) return;
+  document.getElementById('fed-tbody').innerHTML = '<tr><td colspan="7" class="empty-row">Loading pipeline…</td></tr>';
+  fetch('/.netlify/functions/client-pipeline?bc_email=' + encodeURIComponent(getEmail()), { headers: { Authorization: 'Bearer ' + tok } })
+    .then(function(r) {
+      if (r.status === 401) { signOut(); return null; }
+      return r.json();
+    })
+    .then(function(d) {
+      if (!d) return;
+      // Update entity card — response nests client data under d.client
+      var cl = d.client || d;
+      var biz = cl.business_name || cl.businessName || getEmail();
+      document.getElementById('hdr-biz').textContent = biz;
+      document.getElementById('ec-biz').textContent = biz;
+      document.getElementById('ec-uei').textContent = cl.uei || d.uei || '—';
+      document.getElementById('hdr-uei').textContent = (cl.uei || d.uei) ? 'UEI: ' + (cl.uei || d.uei) : '';
+      document.getElementById('ec-naics-count').textContent = (cl.naics || d.naics || []).length + ' codes';
+      document.getElementById('ec-refresh').textContent = 'Today';
+      // Build NAICS ribbon
+      activeNaics = (cl.naics || d.naics || []).slice();
+      buildNaicsRibbon(cl.naics || d.naics || []);
+      // Store opps
+      allOpps = d.opportunities || [];
+      document.getElementById('ec-refresh').textContent = fmtDate(new Date().toISOString());
+      applyFedFilters();
+      loadAnalysisBadges();
+    })
+    .catch(function(e) {
+      document.getElementById('fed-tbody').innerHTML = '<tr><td colspan="7" class="empty-row">Could not load pipeline. <button onclick="loadFederal()" style="color:var(--cyan);background:none;border:none;cursor:pointer;font-size:.82rem;text-decoration:underline">Retry</button></td></tr>';
+    });
+}
+
+var NAICS_DESC = {
+  '541511':'Custom Computer Programming','541512':'Computer Systems Design',
+  '541513':'Computer Facilities Mgmt','541519':'Other Computer Services',
+  '541330':'Engineering Services','541340':'Drafting Services',
+  '541350':'Building Inspection','541360':'Geophysical Surveying',
+  '541370':'Surveying & Mapping','541380':'Testing Laboratories',
+  '541611':'Admin & Mgmt Consulting','541612':'HR Consulting',
+  '541613':'Marketing Consulting','541614':'Logistics Consulting',
+  '541618':'Other Mgmt Consulting','541620':'Environmental Consulting',
+  '541690':'Other Scientific Services','541810':'Advertising Agencies',
+  '541820':'Public Relations','541990':'Other Professional Services',
+  '561210':'Facilities Support Services','561499':'Other Business Support',
+  '561720':'Janitorial Services','561730':'Landscaping Services',
+  '238210':'Electrical Contractors','238220':'Plumbing & HVAC',
+  '484110':'General Freight Trucking','518210':'Data Processing Services'
+};
+
+function buildNaicsRibbon(codes) {
+  var ribbon = document.getElementById('naics-ribbon');
+  ribbon.innerHTML = codes.map(function(code) {
+    var desc = NAICS_DESC[code] || 'NAICS ' + code;
+    return '<div class="naics-bubble on" data-naics="' + esc(code) + '" onclick="toggleNaics(this,\'' + esc(code) + '\')">'
+      + '<div class="nb-code">' + esc(code) + '</div>'
+      + '<div class="nb-tip">' + esc(desc) + '</div>'
+      + '</div>';
+  }).join('');
+}
+
+function toggleNaics(el, code) {
+  var idx = activeNaics.indexOf(code);
+  if (idx >= 0) { activeNaics.splice(idx, 1); el.classList.remove('on'); el.classList.add('off'); }
+  else { activeNaics.push(code); el.classList.remove('off'); el.classList.add('on'); }
+  applyFedFilters();
+}
+
+document.getElementById('naics-all-btn').addEventListener('click', function() {
+  activeNaics = document.querySelectorAll('.naics-bubble');
+  var codes = [];
+  document.querySelectorAll('.naics-bubble').forEach(function(b) { b.classList.add('on'); b.classList.remove('off'); codes.push(b.dataset.naics); });
+  activeNaics = codes;
+  applyFedFilters();
+});
+
+document.getElementById('naics-clear-btn').addEventListener('click', function() {
+  activeNaics = [];
+  document.querySelectorAll('.naics-bubble').forEach(function(b) { b.classList.remove('on'); b.classList.add('off'); });
+  applyFedFilters();
+});
+
+document.querySelectorAll('.win-btn').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.win-btn').forEach(function(b) { b.classList.remove('on'); });
+    btn.classList.add('on');
+    windowDays = parseInt(btn.dataset.days) || 0;
+    applyFedFilters();
+  });
+});
+
+document.getElementById('fed-search').addEventListener('input', applyFedFilters);
+document.getElementById('fed-setaside').addEventListener('change', applyFedFilters);
+
+function applyFedFilters() {
+  var q  = (document.getElementById('fed-search').value || '').toLowerCase();
+  var sa = document.getElementById('fed-setaside').value;
+  filteredOpps = allOpps.filter(function(o) {
+    if (activeNaics.length && activeNaics.indexOf(o.naics || o.naicsCode || '') === -1) return false;
+    if (q && !(String(o.title||'').toLowerCase().includes(q) || String(o.agency||'').toLowerCase().includes(q))) return false;
+    if (sa && !String(o.set_aside || o.setAside || '').includes(sa)) return false;
+    if (windowDays > 0) {
+      var d = daysLeft(o.deadline || o.responseDeadline);
+      if (d === null || d < 0 || d > windowDays) return false;
+    }
+    return true;
+  });
+
+  // Stats
+  var hot=0, warm=0, ok=0;
+  filteredOpps.forEach(function(o) {
+    var u = urgency(o.deadline || o.responseDeadline);
+    if (u==='hot') hot++; else if (u==='warm') warm++; else ok++;
+  });
+  document.getElementById('stat-hot').textContent   = hot;
+  document.getElementById('stat-warm').textContent  = warm;
+  document.getElementById('stat-ok').textContent    = ok;
+  document.getElementById('stat-total').textContent = filteredOpps.length;
+  document.getElementById('tab-fed-count').textContent = filteredOpps.length;
+  document.getElementById('fed-count-lbl').textContent = filteredOpps.length + ' contracts';
+
+  renderFedTable(filteredOpps);
+}
+
+function renderFedTable(opps) {
+  renderedOpps = opps;
+  var tbody = document.getElementById('fed-tbody');
+  var cards  = document.getElementById('fed-cards');
+  if (!opps.length) {
+    tbody.innerHTML = '<tr><td colspan="7" class="empty-row">No contracts matched your current filters.</td></tr>';
+    cards.innerHTML = '';
+    return;
+  }
+  tbody.innerHTML = opps.map(function(o, i) {
+    var cb = analysisCache[o.notice_id || o.noticeId];
+    var badge = cb ? ' <span class="fit-badge ' + (cb.recommendation||'').toLowerCase().replace(' ','_') + '">' + esc(cb.recommendation) + ' ' + cb.fit_score + '</span>' : '';
+    var dl = o.deadline || o.responseDeadline;
+    return '<tr>'
+      + '<td><button class="t-title" onclick="openDetail(' + i + ')">' + esc(o.title||'Untitled') + '</button>' + badge + '</td>'
+      + '<td style="font-size:.76rem;color:var(--muted)">' + esc(o.agency||'—') + '</td>'
+      + '<td>' + typeChip(o.type) + '</td>'
+      + '<td style="font-size:.75rem;color:var(--muted)">' + esc(o.set_aside || o.setAside || 'Unrestricted') + '</td>'
+      + '<td><span class="chip chip-naics">' + esc(o.naics || o.naicsCode || '—') + '</span></td>'
+      + '<td>' + deadlineBadge(dl) + '</td>'
+      + '<td><button class="analyze-btn" onclick="openFit(' + i + ')">★ Analyze Fit</button></td>'
+      + '</tr>';
+  }).join('');
+  cards.innerHTML = opps.map(function(o, i) {
+    var dl = o.deadline || o.responseDeadline;
+    return '<div class="opp-card">'
+      + '<button class="opp-card-title" onclick="openDetail(' + i + ')">' + esc(o.title||'Untitled') + '</button>'
+      + '<div class="opp-card-agency">' + esc(o.agency||'—') + '</div>'
+      + '<div class="opp-card-row"><div>' + typeChip(o.type) + ' <span class="chip chip-naics">' + esc(o.naics || o.naicsCode || '') + '</span></div>' + deadlineBadge(dl) + '</div>'
+      + '<button class="analyze-btn" style="width:100%;padding:8px;margin-top:8px" onclick="openFit(' + i + ')">★ Analyze Fit</button>'
+      + '</div>';
+  }).join('');
+}
+
+function loadAnalysisBadges() {
+  var email = getEmail();
+  if (!email) return;
+  fetch(SB_URL + '/rest/v1/opportunity_analyses?account_email=eq.' + encodeURIComponent(email) + '&select=opportunity_id,recommendation,fit_score&order=created_at.desc', { headers: { apikey: SB_ANON, Authorization: 'Bearer ' + SB_ANON } })
+    .then(function(r) { return r.json(); })
+    .then(function(rows) {
+      if (!Array.isArray(rows)) return;
+      rows.forEach(function(r) { analysisCache[r.opportunity_id] = r; });
+      renderFedTable(renderedOpps);
+    })
+    .catch(function() {});
+}
+
+// ── Contract detail drawer ────────────────────────────────────────────────────
+function openDetail(idx) {
+  var o = renderedOpps[idx];
+  if (!o) return;
+  currentOpp = o;
+  document.getElementById('cd-title').textContent  = o.title || 'Untitled';
+  document.getElementById('cd-agency').textContent = o.agency || '';
+  var dl = o.deadline || o.responseDeadline;
+  var u  = urgency(dl);
+  var chips = [typeChip(o.type)];
+  if (o.naics || o.naicsCode) chips.push('<span class="chip chip-naics">NAICS ' + esc(o.naics || o.naicsCode) + '</span>');
+  if (u !== 'none' && u !== 'expired') chips.push(deadlineBadge(dl));
+  document.getElementById('cd-chips').innerHTML = chips.join(' ');
+  document.getElementById('cd-grid').innerHTML =
+    '<div class="cd-item"><div class="cd-item-lbl">Deadline</div><div class="cd-item-val">' + fmtDate(dl) + '</div></div>'
+    + '<div class="cd-item"><div class="cd-item-lbl">Notice ID</div><div class="cd-item-val" style="font-size:.72rem;word-break:break-all">' + esc(o.notice_id || o.noticeId || '—') + '</div></div>'
+    + '<div class="cd-item"><div class="cd-item-lbl">Type</div><div class="cd-item-val">' + esc(o.type||'—') + '</div></div>'
+    + '<div class="cd-item"><div class="cd-item-lbl">Set-Aside</div><div class="cd-item-val">' + esc(o.set_aside || o.setAside || 'Unrestricted') + '</div></div>';
+  document.getElementById('cd-desc').textContent = o.description || 'Run Analyze Fit below — our AI extracts the requirements, evaluates your capability match, and gives you a complete bid/no-bid decision in seconds.';
+  document.getElementById('cd-analyze-btn').onclick = function() { closeDetail(); openFit(idx); };
+  document.getElementById('cd-overlay').classList.add('open');
+  document.getElementById('cd-drawer').classList.add('open');
+}
+
+function closeDetail() {
+  document.getElementById('cd-overlay').classList.remove('open');
+  document.getElementById('cd-drawer').classList.remove('open');
+}
+
+document.getElementById('cd-close-btn').addEventListener('click', closeDetail);
+document.getElementById('cd-overlay').addEventListener('click', closeDetail);
+
+// ── Analyze Fit drawer ────────────────────────────────────────────────────────
+function openFit(idx) {
+  var o = renderedOpps[idx];
+  if (!o) return;
+  var noticeId = o.notice_id || o.noticeId;
+  if (!noticeId) return;
+  sessionStorage.setItem('analyze_opp', JSON.stringify({
+    title: o.title, agency: o.agency, naics: o.naics || o.naicsCode,
+    set_aside: o.set_aside || o.setAside, response_deadline: o.deadline || o.responseDeadline
+  }));
+  window.location.href = '/analyze-fit?id=' + encodeURIComponent(noticeId);
+}
+
+function closeFit() {
+  clearPoll();
+  document.getElementById('fit-overlay').classList.remove('open');
+  document.getElementById('fit-drawer').classList.remove('open');
+  document.body.style.overflow = '';
+  // Reset proposal panel on close
+  document.getElementById('proposal-panel').classList.remove('open');
+  document.getElementById('prop-messages').innerHTML = '';
+  proposalMessages = [];
+  proposalOpp = null;
+}
+
+// ── Proposal Development Agent ────────────────────────────────────────────────
+var proposalMessages = [];
+var proposalOpp = null;
+var proposalSending = false;
+
+function openProposalPanel() {
+  // Grab the currently displayed opportunity from the fit drawer
+  proposalOpp = currentAnalysisOpp || null;
+  var panel = document.getElementById('proposal-panel');
+  panel.classList.add('open');
+  panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  // Send an opening message to get the agent started
+  if (!proposalMessages.length) {
+    sendProposalMessage('Hello — please confirm the solicitation and my business profile on file, then recommend where we should start.');
+  }
+}
+
+function addProposalMessage(role, text) {
+  var box = document.getElementById('prop-messages');
+  var div = document.createElement('div');
+  div.className = role === 'user' ? 'prop-msg-user' : 'prop-msg-ai';
+  div.textContent = text;
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+}
+
+function setProposalThinking(on) {
+  var box = document.getElementById('prop-messages');
+  var existing = box.querySelector('.prop-thinking');
+  if (on && !existing) {
+    var t = document.createElement('div');
+    t.className = 'prop-thinking';
+    t.id = 'prop-thinking';
+    t.textContent = 'Agent is writing…';
+    box.appendChild(t);
+    box.scrollTop = box.scrollHeight;
+  } else if (!on && existing) {
+    existing.remove();
+  }
+}
+
+async function sendProposalMessage(text) {
+  if (proposalSending) return;
+  var tok = getToken();
+  if (!tok) { addProposalMessage('ai', 'Session expired. Please sign in again.'); return; }
+  if (!proposalOpp) { addProposalMessage('ai', 'No contract selected. Please close this panel, select a contract, and run Analyze Fit first.'); return; }
+
+  proposalSending = true;
+  var sendBtn = document.getElementById('proposal-send');
+  if (sendBtn) sendBtn.disabled = true;
+
+  if (text !== proposalMessages[proposalMessages.length - 1]?.content) {
+    addProposalMessage('user', text);
+  }
+  setProposalThinking(true);
+
+  try {
+    var resp = await fetch('/.netlify/functions/ngcc-proposal-agent', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + tok },
+      body: JSON.stringify({
+        opportunity: {
+          notice_id: proposalOpp.notice_id || proposalOpp.noticeId || '',
+          title:     proposalOpp.title || '',
+          agency:    proposalOpp.agency || '',
+          naics:     proposalOpp.naics || '',
+          set_aside: proposalOpp.set_aside || proposalOpp.setAside || '',
+          deadline:  proposalOpp.deadline || proposalOpp.responseDeadline || '',
+          url:       proposalOpp.url || ''
+        },
+        messages: proposalMessages,
+        user_message: text
+      })
+    });
+    var data = await resp.json();
+    setProposalThinking(false);
+    if (!resp.ok) {
+      addProposalMessage('ai', data.error || 'An error occurred. Please try again.');
+    } else {
+      proposalMessages = data.messages || proposalMessages;
+      addProposalMessage('ai', data.reply || '');
+    }
+  } catch (e) {
+    setProposalThinking(false);
+    addProposalMessage('ai', 'Connection error. Please try again.');
+  }
+
+  proposalSending = false;
+  if (sendBtn) sendBtn.disabled = false;
+  var input = document.getElementById('proposal-input');
+  if (input) { input.value = ''; input.style.height = '42px'; input.focus(); }
+}
+
+document.getElementById('proposal-send').addEventListener('click', function() {
+  var input = document.getElementById('proposal-input');
+  var text = (input.value || '').trim();
+  if (text) sendProposalMessage(text);
+});
+
+function launchGeneratePackage(e) {
+  e.preventDefault();
+  var tok = getToken();
+  if (!tok) { addProposalMessage('ai', 'Session expired. Please sign in again.'); return; }
+  if (!proposalOpp) { addProposalMessage('ai', 'No contract selected. Please select a contract and run Analyze Fit first.'); return; }
+  var opp = proposalOpp;
+  var oppParam = encodeURIComponent(JSON.stringify({
+    notice_id: opp.notice_id || opp.noticeId || '',
+    title: opp.title || '',
+    agency: opp.agency || '',
+    naics: opp.naics || '',
+    set_aside: opp.set_aside || opp.setAside || '',
+    deadline: opp.deadline || opp.responseDeadline || '',
+    url: opp.url || ''
+  }));
+  var url = 'https://gcpdc.aproposgroupllc.com/generate-package.html'
+    + '?session_token=' + encodeURIComponent(tok)
+    + '&opportunity_id=' + encodeURIComponent(opp.notice_id || opp.noticeId || '')
+    + '&opp=' + oppParam;
+  window.open(url, '_blank');
+}
+
+document.getElementById('proposal-input').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    var text = (this.value || '').trim();
+    if (text) sendProposalMessage(text);
+  }
+  // Auto-resize textarea
+  this.style.height = '42px';
+  this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+});
+
+document.getElementById('fit-close-btn').addEventListener('click', closeFit);
+document.getElementById('fit-overlay').addEventListener('click', closeFit);
+document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { closeFit(); closeDetail(); } });
+
+function runAnalysis(opp, force) {
+  var tok = getToken();
+  if (!tok) { document.getElementById('fit-body').innerHTML = '<div class="fit-error">Session expired. Please <a href="/onboarding" style="color:var(--cyan)">sign in again</a>.</div>'; return; }
+  clearPoll();
+  document.getElementById('fit-body').innerHTML = '<div class="fit-loading"><span class="fit-spinner"></span>Contacting AI…</div>';
+  fetch('/.netlify/functions/analyze-fit', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + tok },
+    body: JSON.stringify({ opportunityId: opp.notice_id || opp.noticeId, force: force, deep: true, opportunity: { title: opp.title, agency: opp.agency, naics: opp.naics || opp.naicsCode, set_aside: opp.set_aside || opp.setAside, deadline: opp.deadline || opp.responseDeadline } })
+  })
+  .then(function(r) {
+    if (r.status === 401) { document.getElementById('fit-body').innerHTML = '<div class="fit-error">Session expired. Please <a href="/onboarding" style="color:var(--cyan)">sign in again</a>.</div>'; return null; }
+    if (r.status === 409) { document.getElementById('fit-body').innerHTML = '<div class="fit-error">Complete your profile to unlock analysis.</div>'; return null; }
+    if (r.status === 429) { document.getElementById('fit-body').innerHTML = '<div class="fit-error">Daily analysis limit reached. Try again tomorrow.</div>'; return null; }
+    return r.json();
+  })
+  .then(function(d) {
+    if (!d) return;
+    if (d.status === 'complete') { renderFitResult(d, opp); return; }
+    if (d.status === 'stage1_complete') { renderFitResult(d, opp); pollAnalysis(d.id, opp, tok); return; }
+    if (d.id) { pollAnalysis(d.id, opp, tok); return; }
+    if (d.error) { document.getElementById('fit-body').innerHTML = '<div class="fit-error">' + esc(d.error) + '</div>'; }
+  })
+  .catch(function(e) { document.getElementById('fit-body').innerHTML = '<div class="fit-error">Network error: ' + esc(e.message) + '</div>'; });
+}
+
+function pollAnalysis(id, opp, tok) {
+  clearPoll();
+  document.getElementById('fit-body').innerHTML = '<div class="fit-loading"><span class="fit-spinner"></span>Running analysis…</div>';
+  pollTimer = setInterval(function() {
+    fetch('/.netlify/functions/get-analysis?id=' + encodeURIComponent(id), { headers: { Authorization: 'Bearer ' + tok } })
+      .then(function(r) {
+        if (r.status === 401) { clearPoll(); document.getElementById('fit-body').innerHTML = '<div class="fit-error">Session expired. Please <a href="/onboarding" style="color:var(--cyan)">sign in again</a>.</div>'; return null; }
+        return r.json();
+      })
+      .then(function(d) {
+        if (!d) return;
+        if (d.status === 'complete') { clearPoll(); renderFitResult(d, opp); }
+        else if (d.status === 'stage1_complete') { renderFitResult(d, opp); }
+        else if (d.status === 'failed') { clearPoll(); document.getElementById('fit-body').innerHTML = '<div class="fit-error">Analysis failed. Please try again.</div>'; }
+      })
+      .catch(function() {});
+  }, 3000);
+}
+
+function clearPoll() { if (pollTimer) { clearInterval(pollTimer); pollTimer = null; } }
+
+function renderFitResult(d, opp) {
+  var s1  = d.stage1 || {};
+  var rec = (d.recommendation || 'NO_BID').toLowerCase().replace(/ /g,'_');
+  var score = d.fit_score != null ? d.fit_score : '—';
+  var m   = s1.match || {};
+  if (d.opportunity_id || (opp.notice_id || opp.noticeId)) analysisCache[d.opportunity_id || opp.notice_id || opp.noticeId] = d;
+
+  var html = (d.cached ? '<div style="font-size:.71rem;color:rgba(255,255,255,.38);margin-bottom:16px">Cached · <button onclick="runAnalysis(currentOpp,true)" style="color:#6EE7A8;background:none;border:none;font-size:.71rem;cursor:pointer;text-decoration:underline">Re-analyze</button></div>' : '')
+    + '<div class="fit-hero"><div><div class="fit-score ' + rec + '">' + score + '</div><div class="rec-badge ' + rec + '">' + esc(d.recommendation||'NO_BID') + '</div></div>'
+    + '<div style="flex:1"><div style="font-size:.83rem;color:rgba(255,255,255,.8);line-height:1.45">' + esc(s1.opportunity_summary||'') + '</div></div></div>'
+    + '<div class="fit-match-grid">'
+    + '<div class="fit-match-item"><div class="fit-match-icon">' + (m.naics_match?'✅':'❌') + '</div><div class="fit-match-label">NAICS</div><div class="fit-match-val">' + esc(m.naics_detail||(m.naics_match?'Match':'No match')) + '</div></div>'
+    + '<div class="fit-match-item"><div class="fit-match-icon">' + (m.set_aside_eligible?'✅':'❌') + '</div><div class="fit-match-label">Set-Aside</div><div class="fit-match-val">' + esc(m.set_aside_detail||(m.set_aside_eligible?'Eligible':'Not eligible')) + '</div></div>'
+    + '<div class="fit-match-item"><div class="fit-match-icon">' + ((m.capability_alignment||'').toUpperCase()==='HIGH'?'✅':(m.capability_alignment||'').toUpperCase()==='MEDIUM'?'⚡':'⚠️') + '</div><div class="fit-match-label">Capability</div><div class="fit-match-val">' + esc((m.capability_alignment||'LOW').toUpperCase()) + '</div></div>'
+    + '</div>'
+    + '<div class="fit-section"><div class="fit-h">Analyst Rationale</div><span class="fit-rule">Bid / No-Bid reasoning</span><p class="fit-text">' + esc(s1.rationale||'') + '</p></div>';
+
+  if (d.stage2) html += buildStage2(d.stage2);
+
+  var noticeId = opp.notice_id || opp.noticeId;
+  html += '<p style="font-size:.72rem;color:rgba(255,255,255,.25);margin-top:18px;font-style:italic;font-family:\'Cormorant Garamond\',serif">Analysis based on official public records and your capability profile.</p>'
+    + '<div class="fit-footer">'
+    + '<button class="fit-btn-propose" onclick="openProposalPanel()">Develop My Proposal →</button>'
+    + (noticeId ? '<a href="/analyze-fit?id=' + encodeURIComponent(noticeId) + '" style="font-size:.74rem;color:var(--cyan);text-decoration:none;margin-left:14px;white-space:nowrap">View Full Report →</a>' : '')
+    + '</div>';
+
+  document.getElementById('fit-body').innerHTML = html;
+  renderFedTable(renderedOpps); // refresh badges
+}
+
+function buildStage2(s2) {
+  function sec(label, rule, content) {
+    return '<div class="fit-acc-item"><div class="fit-acc-head" onclick="this.classList.toggle(\'open\');this.nextElementSibling.classList.toggle(\'open\')">' + label + '<span>›</span></div><div class="fit-acc-body"><span class="fit-rule">' + rule + '</span>' + content + '</div></div>';
+  }
+  function list(arr) {
+    if (!arr||!arr.length) return '<p class="fit-text" style="color:rgba(255,255,255,.4)">Not specified.</p>';
+    return '<ul class="fit-list">' + arr.map(function(i){return '<li>'+esc(String(i))+'</li>';}).join('') + '</ul>';
+  }
+  function checklist(items) {
+    if (!items||!items.length) return '';
+    return '<div class="fit-checklist">' + items.map(function(it,i){
+      var obj = typeof it==='object'?it:{item:it};
+      return '<label class="fit-check"><input type="checkbox" id="ck'+i+'"><div class="fit-check-text">'+esc(obj.item||'')+(obj.owner_hint?'<div style="font-size:.7rem;color:rgba(255,255,255,.36);margin-top:2px">Owner: '+esc(obj.owner_hint)+'</div>':'')+'</div></label>';
+    }).join('') + '</div>';
+  }
+  return '<div class="fit-section"><div class="fit-h">Full Pursuit Package</div><span class="fit-rule">Stage 2 — complete proposal prep</span></div>'
+    + '<div class="fit-acc">'
+    + sec('Required Work Scope','What the government is buying', list(s2.required_work))
+    + sec('Staffing & Delivery','Roles, clearances, delivery', list(s2.staffing_delivery))
+    + sec('Documents Needed','Everything required to respond', list(s2.documents_needed))
+    + sec('Proposal Checklist','Actionable steps with owners', checklist(s2.proposal_checklist))
+    + sec('Draft Technical Approach','Tailored to your capabilities','<p class="fit-text" style="white-space:pre-line">'+esc(s2.draft_technical_approach||'')+'</p>')
+    + sec('Pricing Considerations','Contract type and cost drivers', list(s2.pricing_considerations))
+    + sec('Questions for the CO','Smart questions to submit', list(s2.questions_for_co))
+    + '</div>';
+}
+
+// ── Nevada Service Taxonomy ───────────────────────────────────────────────────
+var NV_TAXONOMY = [
+  { cat:'Information Technology', icon:'💻', services:[
+    { id:'sw_dev',    label:'Software Development',          kw:['software','development','programming','application','app','coding','system','database'] },
+    { id:'network',   label:'Network Infrastructure',        kw:['network','infrastructure','cisco','routing','switching','wireless','fiber','cabling','lan','wan'] },
+    { id:'security',  label:'Cybersecurity',                 kw:['security','cyber','firewall','vulnerability','intrusion','siem','compliance','risk'] },
+    { id:'cloud',     label:'Cloud Services',                kw:['cloud','azure','aws','saas','hosting','migration','virtual'] },
+    { id:'it_support',label:'IT Support & Help Desk',        kw:['support','help desk','helpdesk','technical','desktop','maintenance','service desk'] },
+    { id:'data',      label:'Data Management & Analytics',   kw:['data','analytics','reporting','dashboard','bi','database','warehouse','management'] },
+    { id:'web',       label:'Website & Web Applications',    kw:['website','web','portal','digital','online','cms','e-government'] },
+    { id:'av_telecom',label:'Audio/Visual & Telecom',        kw:['audio','visual','telecom','telephone','voip','video','conference','communication'] }
+  ]},
+  { cat:'Construction & Trades', icon:'🏗️', services:[
+    { id:'general',   label:'General Construction',          kw:['construction','building','renovation','remodel','facility','structure'] },
+    { id:'electrical',label:'Electrical',                    kw:['electrical','electric','wiring','panel','generator','lighting','power'] },
+    { id:'plumbing',  label:'Plumbing & HVAC',               kw:['plumbing','hvac','heating','cooling','air conditioning','ventilation','mechanical'] },
+    { id:'roofing',   label:'Roofing',                       kw:['roof','roofing','waterproof'] },
+    { id:'flooring',  label:'Flooring',                      kw:['flooring','floor','carpet','tile','vinyl'] },
+    { id:'painting',  label:'Painting',                      kw:['paint','coating','finishing'] },
+    { id:'concrete',  label:'Concrete & Masonry',            kw:['concrete','masonry','asphalt','paving','sidewalk','curb'] }
+  ]},
+  { cat:'Professional Services', icon:'📋', services:[
+    { id:'consulting',label:'Management Consulting',         kw:['consulting','management','advisory','strategy','assessment','planning'] },
+    { id:'finance',   label:'Financial & Accounting',        kw:['financial','accounting','audit','fiscal','budget','cpa'] },
+    { id:'legal',     label:'Legal Services',                kw:['legal','attorney','law','counsel','compliance'] },
+    { id:'training',  label:'Training & Education',          kw:['training','education','workforce','learning','instruction','course'] },
+    { id:'marketing', label:'Marketing & Communications',    kw:['marketing','communications','outreach','media','public relations','graphic'] },
+    { id:'research',  label:'Research & Studies',            kw:['research','study','survey','analysis','assessment','evaluation'] }
+  ]},
+  { cat:'Facilities & Operations', icon:'🏢', services:[
+    { id:'janitorial',label:'Janitorial & Cleaning',         kw:['janitorial','cleaning','custodial','sanitation','housekeeping'] },
+    { id:'landscape', label:'Landscaping & Grounds',         kw:['landscaping','grounds','lawn','tree','irrigation','mowing'] },
+    { id:'secguard',  label:'Security Services',             kw:['security guard','patrol','access control','surveillance','armed','unarmed'] },
+    { id:'maint',     label:'Building Maintenance',          kw:['maintenance','repair','facility management','operations'] },
+    { id:'waste',     label:'Waste & Recycling',             kw:['waste','recycling','disposal','trash','refuse'] },
+    { id:'moving',    label:'Moving & Logistics',            kw:['moving','relocation','logistics','transport','storage'] }
+  ]},
+  { cat:'Engineering & Architecture', icon:'⚙️', services:[
+    { id:'civil',     label:'Civil Engineering',             kw:['civil','engineering','infrastructure','road','drainage','utilities'] },
+    { id:'arch',      label:'Architecture & Design',         kw:['architecture','design','architectural','blueprint','plans','drawings'] },
+    { id:'env',       label:'Environmental Services',        kw:['environmental','remediation','hazmat','asbestos','testing','assessment'] },
+    { id:'survey',    label:'Surveying & Mapping',           kw:['survey','surveying','mapping','gis','land','topographic'] }
+  ]},
+  { cat:'Supplies & Equipment', icon:'📦', services:[
+    { id:'office_sup',label:'Office Supplies',               kw:['office supplies','furniture','equipment','supplies'] },
+    { id:'tech_hw',   label:'Technology Hardware',           kw:['hardware','computer','laptop','server','printer','scanner','equipment'] },
+    { id:'vehicles',  label:'Vehicles & Fleet',              kw:['vehicle','fleet','truck','automobile','car','equipment'] },
+    { id:'medical',   label:'Medical Supplies',              kw:['medical','health','supplies','equipment','ppe','pharmacy'] },
+    { id:'safety',    label:'Safety Equipment',              kw:['safety','ppe','protective','gear','equipment'] }
+  ]}
+];
+
+var nvSelectedServices = new Set();
+var nvServicePanelOpen = false;
+
+function toggleNvServicePanel() {
+  nvServicePanelOpen = !nvServicePanelOpen;
+  document.getElementById('nv-svc-body').style.display = nvServicePanelOpen ? 'block' : 'none';
+  document.getElementById('nv-svc-chevron').style.transform = nvServicePanelOpen ? 'rotate(90deg)' : '';
+  if (nvServicePanelOpen && !document.getElementById('nv-categories').children.length) renderNvTaxonomy();
+}
+
+function renderNvTaxonomy() {
+  var box = document.getElementById('nv-categories');
+  box.innerHTML = NV_TAXONOMY.map(function(cat) {
+    var catId = 'nvc_' + cat.services[0].id.split('_')[0];
+    return '<div style="margin-bottom:14px">'
+      + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">'
+      + '<span style="font-size:1rem">' + cat.icon + '</span>'
+      + '<span style="font-size:.78rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#fff">' + cat.cat + '</span>'
+      + '<button onclick="toggleCatAll(\''+cat.cat+'\')" style="margin-left:auto;font-size:.62rem;color:var(--muted);background:none;border:1px solid var(--line);border-radius:6px;padding:2px 8px;cursor:pointer">All/None</button>'
+      + '</div>'
+      + '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:6px">'
+      + cat.services.map(function(svc) {
+          var checked = nvSelectedServices.has(svc.id);
+          return '<label style="display:flex;align-items:center;gap:8px;padding:7px 10px;border:1px solid '+(checked?'var(--cyan)':'var(--line)')+';border-radius:8px;cursor:pointer;background:'+(checked?'rgba(91,211,255,.08)':'rgba(255,255,255,.03)')+';transition:.15s;font-size:.82rem;color:'+(checked?'#fff':'var(--muted)'+';')+'">'
+            + '<input type="checkbox" data-svc="'+svc.id+'" '+(checked?'checked':'')+' style="accent-color:var(--cyan);width:14px;height:14px;flex-shrink:0" onchange="toggleNvService(\''+svc.id+'\')">'
+            + svc.label + '</label>';
+        }).join('')
+      + '</div></div>';
+  }).join('');
+}
+
+function toggleNvService(id) {
+  if (nvSelectedServices.has(id)) nvSelectedServices.delete(id);
+  else nvSelectedServices.add(id);
+  saveNvServicesToStorage();
+  renderNvTaxonomy(); // re-render to update styles
+  updateNvSvcSummary();
+}
+
+function toggleCatAll(catName) {
+  var cat = NV_TAXONOMY.find(function(c){ return c.cat === catName; });
+  if (!cat) return;
+  var allOn = cat.services.every(function(s){ return nvSelectedServices.has(s.id); });
+  cat.services.forEach(function(s){ allOn ? nvSelectedServices.delete(s.id) : nvSelectedServices.add(s.id); });
+  saveNvServicesToStorage();
+  renderNvTaxonomy();
+  updateNvSvcSummary();
+}
+
+function clearNvServices() {
+  nvSelectedServices.clear();
+  saveNvServicesToStorage();
+  renderNvTaxonomy();
+  updateNvSvcSummary();
+  applyNvFilters();
+}
+
+function updateNvSvcSummary() {
+  var n = nvSelectedServices.size;
+  document.getElementById('nv-svc-summary').textContent = n
+    ? n + ' service' + (n===1?'':'s') + ' selected — click "Find My Matches" to filter bids'
+    : 'Select the services your business provides to match Nevada bids';
+}
+
+function saveNvServicesToStorage() {
+  try { localStorage.setItem('nv_services_' + (authEmail||''), JSON.stringify([...nvSelectedServices])); } catch(e){}
+}
+
+function loadNvServicesFromStorage() {
+  try {
+    var saved = localStorage.getItem('nv_services_' + (authEmail||''));
+    if (saved) { nvSelectedServices = new Set(JSON.parse(saved)); updateNvSvcSummary(); }
+  } catch(e){}
+}
+
+function applyNvServices() {
+  saveNvServicesToStorage();
+  document.getElementById('nv-svc-save-msg').textContent = '✓ Saved';
+  setTimeout(function(){ document.getElementById('nv-svc-save-msg').textContent=''; }, 2000);
+  toggleNvServicePanel(); // collapse panel
+  applyNvFilters(); // re-filter with service keywords
+}
+
+function getNvServiceKeywords() {
+  var kw = [];
+  NV_TAXONOMY.forEach(function(cat) {
+    cat.services.forEach(function(svc) {
+      if (nvSelectedServices.has(svc.id)) kw = kw.concat(svc.kw);
+    });
+  });
+  return kw;
+}
+
+// ── Nevada pipeline ───────────────────────────────────────────────────────────
+function loadNevada() {
+  loadNvServicesFromStorage(); // restore saved service selections
+  fetch('/.netlify/functions/ngem-pipeline')
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      nvAll = Array.isArray(d.bids) ? d.bids : (Array.isArray(d.results) ? d.results : []);
+      document.getElementById('tab-nv-count').textContent = nvAll.length;
+      applyNvFilters();
+    })
+    .catch(function() { document.getElementById('nv-cards').innerHTML = '<div class="empty-row">Could not load Nevada bids. Try again shortly.</div>'; });
+}
+
+document.getElementById('nv-search').addEventListener('input', applyNvFilters);
+document.getElementById('nv-type').addEventListener('change', applyNvFilters);
+
+function applyNvFilters() {
+  var q  = (document.getElementById('nv-search').value||'').toLowerCase();
+  var tp = document.getElementById('nv-type').value;
+  var svcKw = getNvServiceKeywords(); // from selected service checkboxes
+  nvFiltered = nvAll.filter(function(b) {
+    var hay = (String(b.title||'') + ' ' + String(b.agency||'')).toLowerCase();
+    if (q && !hay.includes(q)) return false;
+    if (tp && (b.type||b.bid_type||'').toUpperCase() !== tp) return false;
+    // If services selected, only show bids that match at least one keyword
+    if (svcKw.length > 0) {
+      var matched = svcKw.some(function(k){ return hay.includes(k.toLowerCase()); });
+      if (!matched) return false;
+    }
+    return true;
+  });
+  document.getElementById('nv-count-lbl').textContent = nvFiltered.length + ' bids';
+  document.getElementById('tab-nv-count').textContent = nvFiltered.length;
+  var box = document.getElementById('nv-cards');
+  if (!nvFiltered.length) { box.innerHTML = '<div class="empty-row">No Nevada bids matched your filters.</div>'; return; }
+  box.innerHTML = nvFiltered.map(function(b, i) {
+    var u = urgency(b.close_date);
+    var cls = u==='hot'?'badge-hot':u==='warm'?'badge-warm':'badge-ok';
+    var typeChip = b.type ? '<span class="chip chip-rfp">'+esc(b.type)+'</span>' : '';
+    return '<div class="nv-card" onclick="openNvDrawer(nvFiltered['+i+'])">'
+      + '<div class="nv-title">' + esc(b.title||'Untitled') + '</div>'
+      + '<div class="nv-meta"><span>' + esc(b.agency||'—') + '</span>'
+      + typeChip
+      + (b.close_date?'<span class="badge '+cls+'">'+esc(b.close_date)+'</span>':'')
+      + '</div>'
+      + '<div class="nv-actions"><span style="font-size:.7rem;color:var(--soft)">' + esc(b.solicitation_no||b.id||'') + '</span>'
+      + '<span style="font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:var(--cyan)">View Details →</span></div>'
+      + '</div>';
+  }).join('');
+}
+
+// ── Nevada bid drawer ────────────────────────────────────────────────────────
+var currentNvBid = null;
+function openNvDrawer(b) {
+  if (!b) return;
+  currentNvBid = b;
+  var u = urgency(b.close_date);
+  var urgCls = u==='hot'?'urgent':u==='warm'?'soon':'ok';
+  var urgLabel = u==='hot'?'Closing Soon!':u==='warm'?'Closing This Week':'Open';
+
+  document.getElementById('nvd-title').textContent = b.title || 'Untitled Bid';
+  document.getElementById('nvd-agency').textContent = b.agency || '—';
+  document.getElementById('nvd-sol').textContent = b.solicitation_no || b.bid_id || b.id || '—';
+  document.getElementById('nvd-issue').textContent = b.issue_date || '—';
+  document.getElementById('nvd-close').textContent = b.close_date || '—';
+  document.getElementById('nvd-portal-link').href = b.url || 'https://nevada.ionwave.net';
+
+  var chips = '';
+  if (b.type) {
+    var tCls = (b.type||'').toUpperCase().includes('RFP') ? 'type-rfp' : 'type-bid';
+    chips += '<span class="nvd-chip '+tCls+'">'+esc(b.type)+'</span>';
+  }
+  chips += '<span class="nvd-chip '+urgCls+'">'+esc(urgLabel)+'</span>';
+  if (b.due_in_days != null && b.due_in_days >= 0) {
+    chips += '<span class="nvd-chip">'+esc(b.due_in_days === 0 ? 'Closes today' : b.due_in_days + ' days left')+'</span>';
+  }
+  document.getElementById('nvd-chips').innerHTML = chips;
+
+  document.getElementById('nvd-overlay').classList.add('open');
+  document.getElementById('nvd-drawer').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeNvDrawer() {
+  document.getElementById('nvd-overlay').classList.remove('open');
+  document.getElementById('nvd-drawer').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function nvBidAsOpp(b) {
+  // Map Nevada bid fields to the opportunity format the federal drawer expects
+  return {
+    notice_id:   b.bid_id || b.id || b.solicitation_no || 'nv-' + (b.title||'').slice(0,20).replace(/\s+/g,'-').toLowerCase(),
+    noticeId:    b.bid_id || b.id || b.solicitation_no || '',
+    title:       b.title || 'Nevada Procurement Opportunity',
+    agency:      b.agency || 'Nevada State Agency',
+    naics:       '',
+    set_aside:   b.type || '',
+    deadline:    b.close_date || '',
+    responseDeadline: b.close_date || '',
+    url:         b.url || 'https://nevada.ionwave.net',
+    solicitation_no: b.solicitation_no || b.id || '',
+    source:      'nevada_ngem'
+  };
+}
+
+function analyzeNvBid() {
+  var b = currentNvBid;
+  if (!b) return;
+  closeNvDrawer();
+  var opp = nvBidAsOpp(b);
+  currentOpp = opp;
+  currentAnalysisOpp = opp;
+  // Reset proposal panel
+  document.getElementById('proposal-panel').classList.remove('open');
+  document.getElementById('prop-messages').innerHTML = '';
+  proposalMessages = []; proposalOpp = null;
+  // Open the fit drawer
+  document.getElementById('fit-opp-title').textContent = opp.title;
+  document.getElementById('fit-opp-agency').textContent = opp.agency;
+  document.getElementById('fit-body').innerHTML = '<div class="fit-loading"><span class="fit-spinner"></span>Analyzing with AI…</div>';
+  document.getElementById('fit-overlay').classList.add('open');
+  document.getElementById('fit-drawer').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  // Switch to Federal tab so the fit drawer context is correct
+  runAnalysis(opp, false);
+}
+
+function proposeNvBid() {
+  var b = currentNvBid;
+  if (!b) return;
+  closeNvDrawer();
+  var opp = nvBidAsOpp(b);
+  currentAnalysisOpp = opp;
+  proposalOpp = opp;
+  proposalMessages = [];
+  document.getElementById('prop-messages').innerHTML = '';
+  // Open the fit drawer with proposal panel
+  document.getElementById('fit-opp-title').textContent = opp.title;
+  document.getElementById('fit-opp-agency').textContent = opp.agency;
+  document.getElementById('fit-body').innerHTML = '<div class="fit-loading"><span class="fit-spinner"></span>Loading proposal agent…</div>';
+  document.getElementById('fit-overlay').classList.add('open');
+  document.getElementById('fit-drawer').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  // Short delay then open proposal panel directly
+  setTimeout(function() {
+    document.getElementById('fit-body').innerHTML = '';
+    openProposalPanel();
+  }, 400);
+}
+document.getElementById('nvd-close-btn').addEventListener('click', closeNvDrawer);
+document.getElementById('nvd-overlay').addEventListener('click', closeNvDrawer);
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') { closeNvDrawer(); }
+});
+
+// ── Three-tab nav: Marketing Dashboard link ───────────────────────────────────
+var mktBar = document.querySelector('[href="/marketing-dashboard"]');
+</script>
+</body>
+</html>

@@ -1,8 +1,105 @@
 [build]
-  command = "npm run build"
-  publish = "dist"
+  publish = "."
+  functions = "netlify/functions"
+
+  [build.environment]
+    NODE_VERSION = "18"
+    PDF_RENDERER = "adobe"
+    SECRETS_SCAN_OMIT_KEYS = "SUPABASE_URL"
+
+[functions]
+  node_bundler = "esbuild"
+
+[functions."send-contractor-outreach"]
+  timeout = 30
+
+[functions."generate-capability-background"]
+  external_node_modules = ["adm-zip"]
 
 [[redirects]]
-  from = "/*"
-  to = "/index.html"
+  from = "/privacy"
+  to = "/privacy.html"
+  status = 200
+
+[[redirects]]
+  from = "/terms"
+  to = "/terms.html"
+  status = 200
+
+[[redirects]]
+  from = "/sms-consent"
+  to = "/sms-consent.html"
+  status = 200
+
+[[redirects]]
+  from = "/pipeline"
+  to = "/pipeline-dashboard.html"
+  status = 200
+
+[[redirects]]
+  from = "/capgen"
+  to = "/capability-generator.html"
+  status = 200
+
+[[redirects]]
+  from = "/apropos"
+  to = "/ag-dashboard.html"
+  status = 200
+
+[[redirects]]
+  from = "/pro"
+  to = "/capgen-pro.html"
+  status = 200
+
+[[redirects]]
+  from = "/pro/thankyou"
+  to = "/capgen-pro-thankyou.html"
+  status = 200
+
+[[redirects]]
+  from = "/offer"
+  to = "https://ai4-product-purchasing.ai4businesses.org/capgen-offer.html"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/welcome"
+  to = "/welcome.html"
+  status = 200
+
+[[redirects]]
+  from = "/onboarding"
+  to = "/onboarding.html"
+  status = 200
+
+[[redirects]]
+  from = "/redeem"
+  to = "/capgen-redeem.html"
+  status = 200
+
+[[redirects]]
+  from = "/signin"
+  to = "/onboarding.html"
+  status = 200
+
+[[redirects]]
+  from = "/login"
+  to = "/onboarding.html"
+  status = 200
+
+[[redirects]]
+  from = "/login.html"
+  to = "/onboarding.html"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/member-login"
+  to = "/onboarding.html"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/capability-report"
+  to = "/capability-report.html"
   status = 200
