@@ -12,6 +12,22 @@ export default async (request, context) => {
     });
   }
 
+  // Remove legacy NGCC identity/navigation from the homepage navbar only.
+  const legacyLogo = `<a class="logo" href="/">
+      <div class="logo-mark">NG</div>
+      <div>
+        <div class="logo-name">NGCC</div>
+        <div class="logo-sub">National Government Contract Center</div>
+      </div>
+    </a>`;
+  const legacyNav = `<nav class="nav-links">
+      <a href="/apropos">My Dashboard</a>
+      <a href="/demo">Demo</a>
+      <a href="#paths">Get Started</a>
+    </nav>`;
+  html = html.replace(legacyLogo, '');
+  html = html.replace(legacyNav, '');
+
   const memberLogin = '<a class="nav-cta" href="/onboarding">Member Login →</a>';
   const agencyLogin = `<div class="rfcp-home-nav-actions">
     <button type="button" class="rfcp-home-agency-btn" id="rfcp-home-agency-open">AGENCY LOGIN</button>
@@ -70,12 +86,17 @@ export default async (request, context) => {
         <p>When people gain access to meaningful employment, greater financial stability, and new opportunities for advancement, families become stronger and communities become more resilient.</p>
         <p class="rfcp-mission-close">Businesses grow. People prosper. Communities become stronger.</p>
       </div>
+      <div class="rfcp-hero-start">
+        <div class="rfcp-hero-start-label">GET STARTED</div>
+        <a href="/onboarding" class="rfcp-trial-pill">FREE 14 DAY TRIAL <span aria-hidden="true">→</span></a>
+      </div>
     </div>`;
 
   html = html.replace(oldHero, newHero);
 
   const css = `
 <style id="rfcp-agency-homepage-css">
+.top-in{justify-content:flex-end}
 .rfcp-home-nav-actions{display:flex;align-items:center;gap:8px;flex-shrink:0}
 .rfcp-home-agency-btn{display:inline-flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#D5AA4D,#E8C982);color:#0F2A6A;border:none;border-radius:4px;padding:.55rem 1.05rem;font-family:var(--body);font-size:.68rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;white-space:nowrap;transition:.2s}
 .rfcp-home-agency-btn:hover{filter:brightness(1.08);transform:translateY(-1px)}
@@ -85,6 +106,10 @@ export default async (request, context) => {
 .rfcp-mission-copy{max-width:690px;color:rgba(255,255,255,.72);font-size:clamp(.9rem,1.1vw,1rem);line-height:1.68}
 .rfcp-mission-copy p{margin:0 0 .85rem}
 .rfcp-mission-copy .rfcp-mission-close{font-family:var(--sub);font-size:clamp(1.15rem,1.8vw,1.45rem);font-style:italic;color:#fff;margin-top:1.2rem;margin-bottom:0}
+.rfcp-hero-start{margin-top:1.65rem;display:flex;flex-direction:column;align-items:flex-start;gap:.55rem}
+.rfcp-hero-start-label{font-size:.6rem;letter-spacing:.22em;text-transform:uppercase;color:rgba(232,201,130,.78);font-weight:700}
+.rfcp-trial-pill{display:inline-flex;align-items:center;justify-content:center;gap:.75rem;padding:.82rem 1.55rem;border-radius:999px;background:var(--white);color:var(--ink);font-family:var(--body);font-size:.76rem;font-weight:800;letter-spacing:.13em;text-transform:uppercase;text-decoration:none;box-shadow:0 10px 30px rgba(0,0,0,.25);transition:transform .2s,box-shadow .2s,background .2s}
+.rfcp-trial-pill:hover{transform:translateY(-2px);background:var(--mist);box-shadow:0 14px 34px rgba(0,0,0,.32)}
 #rfcp-agency-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.68);z-index:1200;align-items:center;justify-content:center;padding:20px}
 #rfcp-agency-overlay.open{display:flex}
 .rfcp-agency-card{width:min(540px,100%);max-height:92vh;overflow:auto;background:#071a38;border:1px solid rgba(213,170,77,.34);border-radius:16px;padding:30px;box-shadow:0 32px 90px rgba(0,0,0,.55);position:relative}
@@ -101,7 +126,7 @@ export default async (request, context) => {
 #rfcp-agency-msg{min-height:20px;margin-top:11px;font-size:.82rem;text-align:center;color:rgba(255,255,255,.52)}
 #rfcp-agency-msg.ok{color:#3EE391}
 #rfcp-agency-msg.err{color:#ff8a8a}
-@media(max-width:620px){.top-in{gap:10px}.rfcp-home-nav-actions{gap:5px}.rfcp-home-agency-btn,.rfcp-home-nav-actions .nav-cta{padding:.48rem .7rem;font-size:.58rem;letter-spacing:.08em}.logo-sub{display:none}.rfcp-agency-card{padding:26px 20px}.rfcp-mission-copy{font-size:.9rem;line-height:1.6}.rfcp-mission-copy p{margin-bottom:.7rem}.rfcp-mission-tagline{font-size:1.05rem}}
+@media(max-width:620px){.top-in{gap:10px}.rfcp-home-nav-actions{gap:5px}.rfcp-home-agency-btn,.rfcp-home-nav-actions .nav-cta{padding:.48rem .7rem;font-size:.58rem;letter-spacing:.08em}.rfcp-agency-card{padding:26px 20px}.rfcp-mission-copy{font-size:.9rem;line-height:1.6}.rfcp-mission-copy p{margin-bottom:.7rem}.rfcp-mission-tagline{font-size:1.05rem}.rfcp-trial-pill{font-size:.68rem;padding:.75rem 1.25rem}}
 </style>`;
 
   const modal = `
