@@ -4,13 +4,10 @@ export default async (request, context) => {
   if (!contentType.includes('text/html')) return response;
 
   let html = await response.text();
-  if (!html.includes('<title>National Government Contract Center')) {
-    return new Response(html, {
-      status: response.status,
-      statusText: response.statusText,
-      headers: response.headers,
-    });
-  }
+
+  // This function is scoped to the homepage by its config below. Do not gate
+  // execution on the legacy page title: another homepage Edge Function may
+  // update SEO metadata before this function receives the response.
 
   // Remove legacy NGCC identity/navigation from the homepage navbar only.
   const legacyLogo = `<a class="logo" href="/">
@@ -33,10 +30,9 @@ export default async (request, context) => {
     <button type="button" class="rfcp-home-agency-btn" id="rfcp-home-agency-open">AGENCY LOGIN</button>
     ${memberLogin}
   </div>`;
-  html = html.replace(memberLogin, agencyLogin);
+  if (!html.includes('id="rfcp-home-agency-open"')) html = html.replace(memberLogin, agencyLogin);
 
-  // Homepage mission messaging: preserve the restored page structure while
-  // replacing the legacy contractor-centric hero with the approved RFCP story.
+  // Homepage mission messaging.
   html = html.replace(
     '<title>National Government Contract Center — Federal · Nevada · California</title>',
     '<title>Federal Contract Portal — Apropos Group LLC</title>'
@@ -179,15 +175,21 @@ export default async (request, context) => {
     submit.disabled=true;submit.textContent='Submitting…';
     fetch('/.netlify/functions/agency-access-intake',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
       .then(function(r){return r.json().then(function(j){return {ok:r.ok,j:j};});})
-      .then(function(res){if(!res.ok)throw new Error((res.j&&res.j.error)||'Agency access request failed.');msg.className='ok';msg.textContent='Agency access request received.';})
+      .then(function(res){
+        if(!res.ok)throw new Error((res.j&&res.j.error)||'Agency access request failed.');
+        msg.className='ok';
+        msg.textContent='Agency access activated. Opening secure login…';
+        var email=payload.business_email;
+        setTimeout(function(){window.location.assign('/onboarding?agency=1&email='+encodeURIComponent(email));},700);
+      })
       .catch(function(err){msg.className='err';msg.textContent=err.message;})
       .finally(function(){submit.disabled=false;submit.textContent='Submit Agency Access';});
   });
 })();
 </script>`;
 
-  html = html.replace('</head>', css + '\n</head>');
-  html = html.replace('</body>', modal + script + '\n</body>');
+  if (!html.includes('id="rfcp-agency-homepage-css"')) html = html.replace('</head>', css + '\n</head>');
+  if (!html.includes('id="rfcp-agency-overlay"')) html = html.replace('</body>', modal + script + '\n</body>');
 
   return new Response(html, {
     status: response.status,
