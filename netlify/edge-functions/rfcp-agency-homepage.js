@@ -19,11 +19,72 @@ export default async (request, context) => {
   </div>`;
   html = html.replace(memberLogin, agencyLogin);
 
+  // Homepage mission messaging: preserve the restored page structure while
+  // replacing the legacy contractor-centric hero with the approved RFCP story.
+  html = html.replace(
+    '<title>National Government Contract Center — Federal · Nevada · California</title>',
+    '<title>Federal Contract Portal — Apropos Group LLC</title>'
+  );
+  html = html.replace(
+    '<meta name="description" content="Your command center for government contract intelligence. Personalized opportunity dashboards for registered federal contractors and state contract seekers. Powered by AG ENGINEERING OS™.">',
+    '<meta name="description" content="Apropos Group LLC Federal Contract Portal — supporting economic growth by helping businesses participate more effectively in the government marketplace.">'
+  );
+
+  const oldHero = `<div class="hero-content">
+      <div class="hero-eye">
+        <div class="eye-line"></div>
+        <span class="eye-text">Apropos Group LLC · Government Contract Intelligence</span>
+      </div>
+      <h1 class="hero-h1">
+        National Government<br>Contract Center
+        <em>Federal. Nevada. California.</em>
+      </h1>
+      <div class="hero-sub">Your command center for government contract intelligence.</div>
+      <p class="hero-copy">
+        Every open government contract opportunity — matched to your business, scored for fit, delivered in a personalized dashboard. Pursue only the contracts your business can actually win.
+      </p>
+      <div class="hero-ctas">
+        <a href="/onboarding" class="hero-cta-pill hero-cta-primary">
+          <span class="hcp-dot"></span>
+          Registered Federal Government Contractors
+          <span class="hcp-arrow">→</span>
+        </a>
+        <a href="#state-options" class="hero-cta-pill hero-cta-secondary" id="stateHeroCta">
+          <span class="hcp-dot hcp-dot-state"></span>
+          All State Licensed Businesses
+          <span class="hcp-arrow">→</span>
+        </a>
+      </div>
+    </div>`;
+
+  const newHero = `<div class="hero-content rfcp-mission-hero">
+      <div class="hero-eye">
+        <div class="eye-line"></div>
+        <span class="eye-text">APROPOS GROUP LLC</span>
+      </div>
+      <h1 class="hero-h1">Federal Contract Portal</h1>
+      <div class="hero-sub rfcp-mission-tagline">Opportunity Builds Business. Business Builds Community.</div>
+      <div class="rfcp-mission-copy">
+        <p>Apropos Group LLC is committed to supporting economic growth by helping businesses participate more effectively in the government marketplace.</p>
+        <p>When government contracts are fulfilled by qualified businesses, those businesses have an opportunity to grow, strengthen their capabilities, create jobs, and contribute to the economic vitality of the communities they serve.</p>
+        <p>When people gain access to meaningful employment, greater financial stability, and new opportunities for advancement, families become stronger and communities become more resilient.</p>
+        <p class="rfcp-mission-close">Businesses grow. People prosper. Communities become stronger.</p>
+      </div>
+    </div>`;
+
+  html = html.replace(oldHero, newHero);
+
   const css = `
 <style id="rfcp-agency-homepage-css">
 .rfcp-home-nav-actions{display:flex;align-items:center;gap:8px;flex-shrink:0}
 .rfcp-home-agency-btn{display:inline-flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#D5AA4D,#E8C982);color:#0F2A6A;border:none;border-radius:4px;padding:.55rem 1.05rem;font-family:var(--body);font-size:.68rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;white-space:nowrap;transition:.2s}
 .rfcp-home-agency-btn:hover{filter:brightness(1.08);transform:translateY(-1px)}
+.rfcp-mission-hero{max-width:760px}
+.rfcp-mission-hero .hero-h1{max-width:760px;margin-bottom:.7rem}
+.rfcp-mission-tagline{color:rgba(232,201,130,.92);font-style:normal;font-weight:500;letter-spacing:.015em;margin-bottom:1.3rem}
+.rfcp-mission-copy{max-width:690px;color:rgba(255,255,255,.72);font-size:clamp(.9rem,1.1vw,1rem);line-height:1.68}
+.rfcp-mission-copy p{margin:0 0 .85rem}
+.rfcp-mission-copy .rfcp-mission-close{font-family:var(--sub);font-size:clamp(1.15rem,1.8vw,1.45rem);font-style:italic;color:#fff;margin-top:1.2rem;margin-bottom:0}
 #rfcp-agency-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.68);z-index:1200;align-items:center;justify-content:center;padding:20px}
 #rfcp-agency-overlay.open{display:flex}
 .rfcp-agency-card{width:min(540px,100%);max-height:92vh;overflow:auto;background:#071a38;border:1px solid rgba(213,170,77,.34);border-radius:16px;padding:30px;box-shadow:0 32px 90px rgba(0,0,0,.55);position:relative}
@@ -40,7 +101,7 @@ export default async (request, context) => {
 #rfcp-agency-msg{min-height:20px;margin-top:11px;font-size:.82rem;text-align:center;color:rgba(255,255,255,.52)}
 #rfcp-agency-msg.ok{color:#3EE391}
 #rfcp-agency-msg.err{color:#ff8a8a}
-@media(max-width:620px){.top-in{gap:10px}.rfcp-home-nav-actions{gap:5px}.rfcp-home-agency-btn,.rfcp-home-nav-actions .nav-cta{padding:.48rem .7rem;font-size:.58rem;letter-spacing:.08em}.logo-sub{display:none}.rfcp-agency-card{padding:26px 20px}}
+@media(max-width:620px){.top-in{gap:10px}.rfcp-home-nav-actions{gap:5px}.rfcp-home-agency-btn,.rfcp-home-nav-actions .nav-cta{padding:.48rem .7rem;font-size:.58rem;letter-spacing:.08em}.logo-sub{display:none}.rfcp-agency-card{padding:26px 20px}.rfcp-mission-copy{font-size:.9rem;line-height:1.6}.rfcp-mission-copy p{margin-bottom:.7rem}.rfcp-mission-tagline{font-size:1.05rem}}
 </style>`;
 
   const modal = `
