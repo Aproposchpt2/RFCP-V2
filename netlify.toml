@@ -114,12 +114,20 @@
   function = "rfcp-dashboard-enhancements"
 
 [[edge_functions]]
+  path = "/apropos"
+  function = "rfcp-dashboard-select-contrast"
+
+[[edge_functions]]
   path = "/ag-dashboard.html"
   function = "rfcp-dashboard-agency-cleanup"
 
 [[edge_functions]]
   path = "/ag-dashboard.html"
   function = "rfcp-dashboard-enhancements"
+
+[[edge_functions]]
+  path = "/ag-dashboard.html"
+  function = "rfcp-dashboard-select-contrast"
 
 [[edge_functions]]
   path = "/analyze-fit"
