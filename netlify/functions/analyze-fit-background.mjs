@@ -1,15 +1,17 @@
 // analyze-fit-background.mjs — Phase 2 (Netlify background function)
 // Invoked by analyze-fit.mjs. Runs Stage 1 → stage1_complete, then Stage 2 → complete.
-// No external auth required — only called server-to-server by analyze-fit.mjs.
+// OpenAI is primary; Anthropic is retained as an optional provider fallback.
 
 const SUPABASE_URL  = process.env.SUPABASE_URL;
 const SUPABASE_KEY  = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const OPENAI_KEY    = process.env.OPENAI_API_KEY;
 const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY;
-const MODEL         = process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-6';
-// Stage 1 is fast triage/scoring → Haiku (2–4x faster verdict). Stage 2 is the
-// deep pursuit package → Sonnet for quality. Both env-overridable.
-const STAGE1_MODEL  = process.env.ANALYZE_STAGE1_MODEL || 'claude-haiku-4-5';
-const STAGE2_MODEL  = process.env.ANALYZE_STAGE2_MODEL || 'claude-sonnet-4-6';
+
+const OPENAI_STAGE1_MODEL = process.env.OPENAI_ANALYZE_STAGE1_MODEL || 'gpt-5.4-mini';
+const OPENAI_STAGE2_MODEL = process.env.OPENAI_ANALYZE_STAGE2_MODEL || 'gpt-5.4';
+const ANTHROPIC_MODEL     = process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-6';
+const ANTHROPIC_STAGE1    = process.env.ANALYZE_STAGE1_MODEL || 'claude-haiku-4-5';
+const ANTHROPIC_STAGE2    = process.env.ANALYZE_STAGE2_MODEL || 'claude-sonnet-4-6';
 
 // ── Supabase helpers ─────────────────────────────────────────────────────────
 
@@ -19,7 +21,7 @@ function sbH(extra = {}) {
 
 async function sbGet(path) {
   const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, { headers: sbH() });
-  if (!res.ok) throw new Error(`Supabase GET: ${(await res.text()).slice(0,200)}`);
+  if (!res.ok) throw new Error(`Supabase GET: ${(await res.text()).slice(0, 200)}`);
   return res.json();
 }
 
@@ -32,50 +34,125 @@ async function sbPatch(filter, update) {
   if (!res.ok) console.error('[bg] Supabase PATCH failed:', await res.text());
 }
 
-// ── Claude API ───────────────────────────────────────────────────────────────
+// ── AI provider layer ────────────────────────────────────────────────────────
 
-async function callClaude(system, user, maxTokens, model) {
+function parseJsonText(text, usage = {}) {
+  const clean = String(text || '').trim()
+    .replace(/^```(?:json)?\s*/i, '')
+    .replace(/\s*```$/, '')
+    .trim();
+  try {
+    return { parsed: JSON.parse(clean), usage };
+  } catch {
+    throw { retryable: true, raw: text, usage };
+  }
+}
+
+function openAIOutputText(data) {
+  if (typeof data.output_text === 'string' && data.output_text.trim()) return data.output_text.trim();
+  for (const item of data.output || []) {
+    if (item?.type !== 'message') continue;
+    for (const part of item.content || []) {
+      if (part?.type === 'output_text' && typeof part.text === 'string') return part.text.trim();
+    }
+  }
+  return '';
+}
+
+async function callOpenAI(system, user, maxTokens, model) {
+  if (!OPENAI_KEY) throw new Error('OPENAI_API_KEY is not configured');
+  const res = await fetch('https://api.openai.com/v1/responses', {
+    method: 'POST',
+    signal: AbortSignal.timeout(150000),
+    headers: {
+      'content-type': 'application/json',
+      'authorization': `Bearer ${OPENAI_KEY}`,
+    },
+    body: JSON.stringify({
+      model,
+      instructions: system,
+      input: user,
+      max_output_tokens: maxTokens,
+    }),
+  });
+  if (!res.ok) throw new Error(`OpenAI API ${res.status}: ${(await res.text()).slice(0, 300)}`);
+  const data = await res.json();
+  const usage = {
+    input_tokens: data.usage?.input_tokens || 0,
+    output_tokens: data.usage?.output_tokens || 0,
+  };
+  return parseJsonText(openAIOutputText(data), usage);
+}
+
+async function callAnthropic(system, user, maxTokens, model) {
+  if (!ANTHROPIC_KEY) throw new Error('ANTHROPIC_API_KEY is not configured');
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
-    signal: AbortSignal.timeout(150000), // headroom for Stage 2's ~4k-token JSON; never hang
+    signal: AbortSignal.timeout(150000),
     headers: {
       'content-type': 'application/json',
       'x-api-key': ANTHROPIC_KEY,
       'anthropic-version': '2023-06-01',
     },
     body: JSON.stringify({
-      model: model || MODEL,
+      model: model || ANTHROPIC_MODEL,
       max_tokens: maxTokens,
       system,
       messages: [{ role: 'user', content: user }],
     }),
   });
-
-  if (!res.ok) throw new Error(`Claude API ${res.status}: ${(await res.text()).slice(0,200)}`);
-  const data  = await res.json();
-  const text  = (data.content?.[0]?.text || '').trim();
-  const usage = data.usage || {};
-  const clean = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
-
-  let parsed;
-  try { parsed = JSON.parse(clean); }
-  catch { throw { retryable: true, raw: text, usage }; }
-  return { parsed, usage };
+  if (!res.ok) throw new Error(`Claude API ${res.status}: ${(await res.text()).slice(0, 300)}`);
+  const data = await res.json();
+  return parseJsonText((data.content?.[0]?.text || '').trim(), data.usage || {});
 }
 
-async function callClaudeWithRetry(system, user, maxTokens, model) {
-  try { return await callClaude(system, user, maxTokens, model); }
-  catch (e) {
+async function callWithJsonRetry(call, system, user, maxTokens, model) {
+  try {
+    return await call(system, user, maxTokens, model);
+  } catch (e) {
     if (e && e.retryable) {
-      return await callClaude(system, user + '\n\nReturn ONLY valid JSON. No prose, no fences.', maxTokens, model);
+      return await call(system, `${user}\n\nReturn ONLY valid JSON. No prose, no fences.`, maxTokens, model);
     }
     throw e;
   }
 }
 
+async function callAI(system, user, maxTokens, stage) {
+  const openAIModel = stage === 1 ? OPENAI_STAGE1_MODEL : OPENAI_STAGE2_MODEL;
+  const anthropicModel = stage === 1 ? ANTHROPIC_STAGE1 : ANTHROPIC_STAGE2;
+  let openAIError;
+
+  if (OPENAI_KEY) {
+    try {
+      console.log(`[bg] AI provider=OpenAI stage=${stage} model=${openAIModel}`);
+      const result = await callWithJsonRetry(callOpenAI, system, user, maxTokens, openAIModel);
+      return { ...result, provider: 'openai', model: openAIModel };
+    } catch (err) {
+      openAIError = err;
+      console.error(`[bg] OpenAI stage ${stage} failed; trying Anthropic fallback:`, err?.message || err);
+    }
+  }
+
+  if (ANTHROPIC_KEY) {
+    try {
+      console.log(`[bg] AI provider=Anthropic fallback stage=${stage} model=${anthropicModel}`);
+      const result = await callWithJsonRetry(callAnthropic, system, user, maxTokens, anthropicModel);
+      return { ...result, provider: 'anthropic', model: anthropicModel };
+    } catch (anthropicError) {
+      if (openAIError) {
+        throw new Error(`All AI providers failed. OpenAI: ${openAIError?.message || openAIError}; Anthropic: ${anthropicError?.message || anthropicError}`);
+      }
+      throw anthropicError;
+    }
+  }
+
+  if (openAIError) throw openAIError;
+  throw new Error('No AI provider configured. Set OPENAI_API_KEY or ANTHROPIC_API_KEY.');
+}
+
 // ── Prompts ──────────────────────────────────────────────────────────────────
 
-const STAGE1_SYSTEM = `You are CapGen's federal contract fit analyst. You assess whether a specific
+const STAGE1_SYSTEM = `You are RFCP's federal contract fit analyst. You assess whether a specific
 small business contractor should pursue a specific federal opportunity.
 Be direct and honest — a wrong BID recommendation costs the contractor weeks
 of wasted proposal effort. NO_BID is a valid and often correct answer.
@@ -91,7 +168,7 @@ opportunity. Do NOT suggest the contractor explore or verify obtaining it.
 Respond with ONLY a single valid JSON object. No markdown, no code fences,
 no commentary before or after the JSON.`;
 
-const STAGE2_SYSTEM = `You are CapGen's federal proposal strategist. The contractor has decided to
+const STAGE2_SYSTEM = `You are RFCP's federal contract pursuit strategist. The contractor has decided to
 evaluate this opportunity seriously. Produce a concrete, actionable pursuit
 package. Be specific to THIS opportunity and THIS contractor — no generic
 boilerplate.
@@ -170,7 +247,6 @@ const STAGE2_SCHEMA = `Return JSON matching exactly this schema:
 // ── Main handler ─────────────────────────────────────────────────────────────
 
 export const handler = async (event) => {
-  // Background functions return 202 immediately — Netlify keeps running this handler
   if (event.httpMethod === 'OPTIONS') return { statusCode: 204, body: '' };
 
   let body;
@@ -181,12 +257,9 @@ export const handler = async (event) => {
   if (!rowId) return { statusCode: 400, body: 'rowId required' };
 
   console.log(`[bg] Starting analysis rowId=${rowId} skipStage1=${skipStage1} deep=${deep}`);
-
-  // Mark as started (prevents duplicate background runs from picking up the same row)
   const markFilter = `id=eq.${rowId}`;
 
   try {
-    // Load profile — beta users read from beta_testers; subscribers from demo_snapshots
     let profile;
     if (isBeta) {
       const testers = await sbGet(`beta_testers?email=eq.${encodeURIComponent(accountEmail)}&limit=1`);
@@ -196,16 +269,10 @@ export const handler = async (event) => {
       }
       const t = testers[0];
       profile = {
-        business_name:    t.company_name || '',
-        uei:              '',
-        cage:             t.cage_code || '',
-        naics:            [t.primary_naics, ...(t.additional_naics || [])].filter(Boolean),
-        set_asides:       [],
-        certifications:   [],
-        capabilities:     'IT services, computer systems design',
-        past_performance: 'Not specified',
-        team_size:        'Not specified',
-        keywords:         [],
+        business_name: t.company_name || '', uei: '', cage: t.cage_code || '',
+        naics: [t.primary_naics, ...(t.additional_naics || [])].filter(Boolean),
+        set_asides: [], certifications: [], capabilities: 'IT services, computer systems design',
+        past_performance: 'Not specified', team_size: 'Not specified', keywords: [],
       };
     } else {
       const snaps = await sbGet(`demo_snapshots?requester_email=eq.${encodeURIComponent(accountEmail)}&order=created_at.desc&limit=1`);
@@ -213,40 +280,31 @@ export const handler = async (event) => {
         await sbPatch(markFilter, { status: 'failed', stage1: { error: 'Profile not found' } });
         return { statusCode: 200, body: 'no profile' };
       }
-      const snap    = snaps[0];
+      const snap = snaps[0];
       const rawProf = snap.profile || {};
       profile = {
-        business_name:    rawProf.legal_name || snap.business_name || '',
-        uei:              rawProf.uei  || '',
-        cage:             rawProf.cage || '',
-        naics:            (rawProf.naics || []).map(n => n.code || n),
-        set_asides:       rawProf.set_asides || [],
-        certifications:   rawProf.set_asides || [],
-        capabilities:     rawProf.capabilities || 'IT services, computer programming, systems design',
+        business_name: rawProf.legal_name || snap.business_name || '',
+        uei: rawProf.uei || '', cage: rawProf.cage || '',
+        naics: (rawProf.naics || []).map(n => n.code || n),
+        set_asides: rawProf.set_asides || [], certifications: rawProf.set_asides || [],
+        capabilities: rawProf.capabilities || 'IT services, computer programming, systems design',
         past_performance: rawProf.past_performance || 'Not specified',
-        team_size:        rawProf.team_size || 'Not specified',
-        keywords:         rawProf.keywords || [],
+        team_size: rawProf.team_size || 'Not specified', keywords: rawProf.keywords || [],
       };
     }
 
-    // Load existing row (to get stage1 if skipStage1)
     const existingRows = await sbGet(`opportunity_analyses?id=eq.${rowId}&limit=1`);
-    const existingRow  = existingRows[0] || {};
+    const existingRow = existingRows[0] || {};
 
-    // Load opportunity
     let opp;
     const opps = await sbGet(`sam_opportunities?notice_id=eq.${encodeURIComponent(opportunityId)}&limit=1`);
     if (opps.length) {
       opp = opps[0];
     } else if (inlineOpp) {
       opp = {
-        notice_id:         opportunityId,
-        title:             inlineOpp.title || '',
-        agency:            inlineOpp.agency || '',
-        naics_code:        inlineOpp.naics || '',
-        set_aside:         inlineOpp.set_aside || '',
-        response_deadline: inlineOpp.deadline || '',
-        raw:               {},
+        notice_id: opportunityId, title: inlineOpp.title || '', agency: inlineOpp.agency || '',
+        naics_code: inlineOpp.naics || '', set_aside: inlineOpp.set_aside || '',
+        response_deadline: inlineOpp.deadline || '', raw: {},
       };
     } else {
       await sbPatch(markFilter, { status: 'failed', stage1: { error: 'Opportunity not found' } });
@@ -254,44 +312,40 @@ export const handler = async (event) => {
     }
 
     const profileBlock = buildProfileBlock(profile);
-    const oppBlock     = buildOppBlock(opp);
-
-    // ── Stage 1 ──────────────────────────────────────────────────────────────
+    const oppBlock = buildOppBlock(opp);
     let stage1, recommendation, fitScore, s1Usage = {};
 
     if (skipStage1 && existingRow.stage1 && existingRow.recommendation !== 'PENDING') {
-      stage1         = existingRow.stage1;
+      stage1 = existingRow.stage1;
       recommendation = existingRow.recommendation;
-      fitScore       = existingRow.fit_score;
+      fitScore = existingRow.fit_score;
       console.log(`[bg] Skipping Stage 1 — using cached: ${recommendation} ${fitScore}`);
     } else {
       console.log('[bg] Running Stage 1…');
       const stage1User = `${profileBlock}\n\n${oppBlock}\n\n${STAGE1_SCHEMA}`;
       try {
-        const r1   = await callClaudeWithRetry(STAGE1_SYSTEM, stage1User, 1200, STAGE1_MODEL);
-        stage1     = r1.parsed;
-        s1Usage    = r1.usage;
+        const r1 = await callAI(STAGE1_SYSTEM, stage1User, 1200, 1);
+        stage1 = r1.parsed;
+        s1Usage = r1.usage;
         recommendation = stage1.recommendation || 'NO_BID';
-        fitScore       = stage1.fit_score || 0;
-        console.log(`[bg] Stage 1 complete: ${recommendation} ${fitScore} (${s1Usage.input_tokens}in/${s1Usage.output_tokens}out)`);
+        fitScore = stage1.fit_score || 0;
+        console.log(`[bg] Stage 1 complete via ${r1.provider}/${r1.model}: ${recommendation} ${fitScore} (${s1Usage.input_tokens || 0}in/${s1Usage.output_tokens || 0}out)`);
       } catch (err) {
         console.error('[bg] Stage 1 failed:', err.message || err);
         await sbPatch(markFilter, { status: 'failed', stage1: { error: String(err.message || err) } });
         return { statusCode: 200, body: 'stage1 failed' };
       }
 
-      // Persist Stage 1 — include opp metadata so UI can display without sessionStorage
       await sbPatch(markFilter, {
         stage1: Object.assign({ _title: opp.title || '', _agency: opp.agency || '', _naics: opp.naics_code || '', _set_aside: opp.set_aside || '', _deadline: opp.response_deadline || '' }, stage1),
         recommendation,
-        fit_score:    fitScore,
+        fit_score: fitScore,
         input_tokens: s1Usage.input_tokens || 0,
         output_tokens: s1Usage.output_tokens || 0,
-        status:       'stage1_complete',
+        status: 'stage1_complete',
       });
     }
 
-    // ── Stage 2 gate ─────────────────────────────────────────────────────────
     const runStage2 = deep || recommendation === 'BID' || recommendation === 'CONDITIONAL';
     if (!runStage2) {
       await sbPatch(markFilter, { status: 'complete' });
@@ -303,31 +357,29 @@ export const handler = async (event) => {
     const stage2User = `${profileBlock}\n\n${oppBlock}\n\nSTAGE 1 ANALYSIS:\n${JSON.stringify(stage1, null, 2)}\n\n${STAGE2_SCHEMA}`;
     let stage2, s2Usage = {};
     try {
-      const r2 = await callClaudeWithRetry(STAGE2_SYSTEM, stage2User, 8000, STAGE2_MODEL);
-      stage2   = r2.parsed;
-      s2Usage  = r2.usage;
-      console.log(`[bg] Stage 2 complete (${s2Usage.input_tokens}in/${s2Usage.output_tokens}out)`);
+      const r2 = await callAI(STAGE2_SYSTEM, stage2User, 8000, 2);
+      stage2 = r2.parsed;
+      s2Usage = r2.usage;
+      console.log(`[bg] Stage 2 complete via ${r2.provider}/${r2.model} (${s2Usage.input_tokens || 0}in/${s2Usage.output_tokens || 0}out)`);
     } catch (err) {
-      // Stage 2 failure → mark complete with stage2=null, log error
       console.error('[bg] Stage 2 failed (non-fatal):', err.message || err);
       await sbPatch(markFilter, {
-        status:        'complete',
-        input_tokens:  (existingRow.input_tokens || s1Usage.input_tokens || 0),
-        output_tokens: (existingRow.output_tokens || s1Usage.output_tokens || 0),
+        status: 'complete',
+        input_tokens: existingRow.input_tokens || s1Usage.input_tokens || 0,
+        output_tokens: existingRow.output_tokens || s1Usage.output_tokens || 0,
       });
       return { statusCode: 200, body: 'complete (stage2 failed)' };
     }
 
     await sbPatch(markFilter, {
       stage2,
-      status:        'complete',
-      input_tokens:  (s1Usage.input_tokens  || 0) + (s2Usage.input_tokens  || 0),
+      status: 'complete',
+      input_tokens: (s1Usage.input_tokens || 0) + (s2Usage.input_tokens || 0),
       output_tokens: (s1Usage.output_tokens || 0) + (s2Usage.output_tokens || 0),
     });
 
     console.log(`[bg] All done. rowId=${rowId}`);
     return { statusCode: 200, body: 'complete' };
-
   } catch (err) {
     console.error('[bg] Fatal error:', err.message || err);
     try {
