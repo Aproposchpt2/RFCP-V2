@@ -60,6 +60,15 @@ header{background:var(--surface);border-bottom:1px solid var(--line);padding:14p
 .nb-tip{position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:#0a1a34;border:1px solid var(--cyan);border-radius:8px;padding:7px 11px;font-size:.72rem;color:#e0f0ff;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .15s;z-index:200;box-shadow:0 6px 20px rgba(0,0,0,.5)}
 .nb-tip::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:#0a1a34}
 .naics-bubble:hover .nb-tip{opacity:1}
+.naics-add-form{display:inline-flex;align-items:center;gap:6px}
+.naics-add-form input{width:100px;padding:4px 10px;border-radius:6px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--text);font-size:.74rem;font-family:inherit}
+.naics-add-form input:focus{outline:none;border-color:var(--cyan)}
+.naics-add-form button{padding:4px 11px;border-radius:6px;border:none;background:var(--cyan);color:#0A1A3A;font-weight:700;font-size:.72rem;cursor:pointer;font-family:inherit}
+.naics-add-form button:disabled{opacity:.5;cursor:default}
+.naics-add-form .cancel{background:rgba(255,255,255,.05);color:var(--muted)}
+.naics-add-note{font-size:.7rem;color:var(--red,#e05555);margin:-4px 0 10px}
+.naics-add-note.ok{color:var(--green,#2ecc8a)}
+.hidden{display:none !important}
 
 /* ── Controls row ── */
 .controls{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px;align-items:center}
@@ -351,7 +360,14 @@ tr:hover td{background:rgba(91,175,255,.04)}
     <span style="font-size:.62rem;text-transform:uppercase;letter-spacing:.1em;color:var(--soft)">NAICS</span>
     <button class="naics-ctrl-btn on" id="naics-all-btn">Select All</button>
     <button class="naics-ctrl-btn" id="naics-clear-btn">Clear All</button>
+    <button class="naics-ctrl-btn" id="naics-add-btn" style="margin-left:auto">+ Add NAICS</button>
+    <form class="naics-add-form hidden" id="naics-add-form">
+      <input type="text" inputmode="numeric" maxlength="6" id="naics-add-input" placeholder="6-digit code" autocomplete="off">
+      <button type="submit" id="naics-add-submit">Add</button>
+      <button type="button" class="cancel" id="naics-add-cancel">Cancel</button>
+    </form>
   </div>
+  <div class="naics-add-note hidden" id="naics-add-note"></div>
   <div class="naics-ribbon" id="naics-ribbon"></div>
 
   <div class="controls">
@@ -535,6 +551,7 @@ function signOut() {
 // ── App state ─────────────────────────────────────────────────────────────────
 var allOpps = [], filteredOpps = [], renderedOpps = [];
 var activeNaics = [];
+var clientId = '';
 var windowDays  = 0;
 var analysisCache = {};
 var currentOpp  = null;
@@ -686,6 +703,7 @@ function loadFederal() {
       document.getElementById('ec-naics-count').textContent = (cl.naics || d.naics || []).length + ' codes';
       document.getElementById('ec-refresh').textContent = 'Today';
       // Build NAICS ribbon
+      clientId = cl.uei || d.uei || ('bc:' + getEmail());
       activeNaics = (cl.naics || d.naics || []).slice();
       buildNaicsRibbon(cl.naics || d.naics || []);
       // Store opps
@@ -733,6 +751,57 @@ function toggleNaics(el, code) {
   else { activeNaics.push(code); el.classList.remove('off'); el.classList.add('on'); }
   applyFedFilters();
 }
+
+// "+ Add NAICS" -- reveals a small inline form, saves to the client's
+// profile (persists across future loads via client-naics-add), then
+// reflects it immediately in the ribbon and re-pulls opportunities for it.
+(function() {
+  var addBtn = document.getElementById('naics-add-btn');
+  var addForm = document.getElementById('naics-add-form');
+  var addInput = document.getElementById('naics-add-input');
+  var addNote = document.getElementById('naics-add-note');
+
+  function closeForm() {
+    addForm.classList.add('hidden');
+    addBtn.classList.remove('hidden');
+    addNote.classList.add('hidden');
+    addInput.value = '';
+  }
+
+  addBtn.addEventListener('click', function() {
+    addBtn.classList.add('hidden');
+    addForm.classList.remove('hidden');
+    addInput.focus();
+  });
+  document.getElementById('naics-add-cancel').addEventListener('click', closeForm);
+
+  addForm.addEventListener('submit', function(e) {
+    e.preventDefault();
+    var code = addInput.value.trim();
+    addNote.classList.remove('hidden', 'ok');
+    if (!/^\d{6}$/.test(code)) { addNote.textContent = 'Enter a 6-digit NAICS code.'; return; }
+    if (activeNaics.indexOf(code) >= 0 || document.querySelector('.naics-bubble[data-naics="' + code + '"]')) {
+      addNote.textContent = 'Already on your list.'; return;
+    }
+    var submitBtn = document.getElementById('naics-add-submit');
+    submitBtn.disabled = true; addNote.textContent = 'Saving…';
+    fetch('/.netlify/functions/client-naics-add', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: clientId, naics: code }),
+    })
+      .then(function(r) { return r.json().then(function(data) { return { ok: r.ok, data: data }; }); })
+      .then(function(result) {
+        if (!result.ok || !result.data.ok) throw new Error((result.data && result.data.error) || 'Could not save.');
+        buildNaicsRibbon(result.data.naics);
+        activeNaics = result.data.naics.slice();
+        document.getElementById('ec-naics-count').textContent = result.data.naics.length + ' codes';
+        closeForm();
+        loadFederal(); // pick up opportunities for the newly added code
+      })
+      .catch(function(err) { addNote.textContent = err.message || 'Could not save. Please try again.'; })
+      .finally(function() { submitBtn.disabled = false; });
+  });
+})();
 
 document.getElementById('naics-all-btn').addEventListener('click', function() {
   activeNaics = document.querySelectorAll('.naics-bubble');
