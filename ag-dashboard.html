@@ -396,7 +396,7 @@ tr:hover td{background:rgba(91,175,255,.04)}
       <thead><tr>
         <th>Opportunity</th><th>Agency</th><th>Type</th><th>Set-Aside</th><th>NAICS</th><th>Deadline</th><th></th>
       </tr></thead>
-      <tbody id="fed-tbody"><tr><td colspan="7" class="empty-row">Loading pipeline…</td></tr></tbody>
+      <tbody id="fed-tbody"><tr><td colspan="7" class="empty-row">Stand by, your dashboard is being built…</td></tr></tbody>
     </table>
   </div>
   <div class="cards" id="fed-cards"></div>
@@ -685,7 +685,7 @@ document.getElementById('auth-code').addEventListener('keydown', function(e) { i
 function loadFederal() {
   var tok = getToken();
   if (!tok) return;
-  document.getElementById('fed-tbody').innerHTML = '<tr><td colspan="7" class="empty-row">Loading pipeline…</td></tr>';
+  document.getElementById('fed-tbody').innerHTML = '<tr><td colspan="7" class="empty-row">Stand by, your dashboard is being built…</td></tr>';
   fetch('/.netlify/functions/client-pipeline?bc_email=' + encodeURIComponent(getEmail()), { headers: { Authorization: 'Bearer ' + tok } })
     .then(function(r) {
       if (r.status === 401) { signOut(); return null; }
@@ -865,7 +865,16 @@ function renderFedTable(opps) {
   var tbody = document.getElementById('fed-tbody');
   var cards  = document.getElementById('fed-cards');
   if (!opps.length) {
-    tbody.innerHTML = '<tr><td colspan="7" class="empty-row">No contracts matched your current filters.</td></tr>';
+    // Distinguish a genuine zero-result review (allOpps itself is empty --
+    // nothing to show regardless of filters) from the user's own filters
+    // narrowing a real result set down to nothing. Showing the bare
+    // "No contracts matched your current filters" for the first case reads
+    // as a broken/instant dead end, especially for a brand-new
+    // agency-introduced client watching the dashboard build for the first
+    // time -- it should read as a completed, considered review instead.
+    tbody.innerHTML = allOpps.length
+      ? '<tr><td colspan="7" class="empty-row">No contracts matched your current filters.</td></tr>'
+      : '<tr><td colspan="7" class="empty-row">Nat-Corp reviewed current opportunities against this business\'s verified capability profile and found none that meet the bar for a genuine match right now. New contracts are evaluated continuously — check back soon.</td></tr>';
     cards.innerHTML = '';
     return;
   }
