@@ -75,7 +75,7 @@ async function fetchBCMemberClient(email) {
   const direct = await fetchDirectCapGenCustomer(cleanEmail);
   if (direct) return direct;
   try {
-    const res = await fetch(SUPABASE_URL + '/rest/v1/biz_center_members?email=eq.' + encodeURIComponent(cleanEmail) + '&select=email,full_name,business_name,industry,city,state,business_stage,subscription_status,trial_end,naics&limit=1', { headers: sbHeaders() });
+    const res = await fetch(SUPABASE_URL + '/rest/v1/biz_center_members?email=eq.' + encodeURIComponent(cleanEmail) + '&select=email,full_name,business_name,industry,city,state,business_stage,subscription_status,trial_end,naics,agency_uei&limit=1', { headers: sbHeaders() });
     if (!res.ok) return null;
     const rows = await res.json();
     if (!Array.isArray(rows) || !rows.length) return null;
@@ -83,12 +83,18 @@ async function fetchBCMemberClient(email) {
     const trialEnd = new Date(member.trial_end);
     const active = member.subscription_status === 'active' || member.subscription_status === 'trialing' || (member.subscription_status === 'trial' && trialEnd > new Date());
     if (!active) return null;
-    // naics is additive: the industry-keyword guess is always the baseline (so a
-    // member who's never touched the NAICS ribbon keeps getting matches), and any
-    // codes they've explicitly added via the ribbon's "+" control are unioned in
-    // on top of it, never replacing it.
-    const naics = uniq([...naicsFromIndustry(member.industry), ...normalizeNaics(member.naics)]);
-    return { name: member.business_name || member.full_name || cleanEmail, business_name: member.business_name || member.full_name || cleanEmail, naics, cage: null, city: member.city || null, state: member.state || null, psc: [], member_type: 'bc_member', business_stage: member.business_stage || null, email: cleanEmail, source: 'biz_center_members', uei: 'bc:' + cleanEmail };
+    // naics: explicit real codes (agency SAM.gov verification, or the ribbon's "+"
+    // control) always win outright -- the industry-keyword guess (including its
+    // generic BC_DEFAULT_NAICS fallback) only fills in when there are NO explicit
+    // codes yet, as a baseline so a member who's never touched anything still gets
+    // some matches. Union-ing the guessed default onto an already-verified NAICS
+    // list (e.g. a real SAM.gov registration) was silently padding it with 3
+    // generic codes the business never actually registered under -- caught
+    // 2026-08-28 verifying NEK Integrated Services LLC's profile against a live
+    // SAM.gov lookup: dashboard showed 13 codes, SAM.gov only confirmed 10.
+    const explicitNaics = normalizeNaics(member.naics);
+    const naics = explicitNaics.length ? explicitNaics : naicsFromIndustry(member.industry);
+    return { name: member.business_name || member.full_name || cleanEmail, business_name: member.business_name || member.full_name || cleanEmail, naics, cage: null, city: member.city || null, state: member.state || null, psc: [], member_type: 'bc_member', business_stage: member.business_stage || null, email: cleanEmail, source: 'biz_center_members', uei: member.agency_uei || ('bc:' + cleanEmail) };
   } catch { return null; }
 }
 

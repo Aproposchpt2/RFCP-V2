@@ -140,6 +140,7 @@ async function landClientOnDashboard({ businessName, entity }) {
       state: entity.state,
       subscription_status: 'active',
       naics: entity.naics,
+      agency_uei: entity.uei,
       agent_context: `Agency-partner intake. Registered federal contractor (UEI ${entity.uei}). Certifications: ${entity.certifications.join(', ') || 'none active'}.`,
     }]),
   });
