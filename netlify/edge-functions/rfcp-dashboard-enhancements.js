@@ -117,7 +117,13 @@ export default async function handler(request, context) {
 
   // Agency login is available both before member authentication and in the
   // authenticated header. Promo submission never bypasses business auth.
-  function openAgency(){ var el=$('rfcp-agency-overlay'); if(el) el.classList.add('open'); }
+  // Redirects to the homepage's own agency modal (?agency=1 auto-opens it)
+  // instead of opening the local copy below -- that copy predates today's
+  // SAM.gov rework (still sends business_email, no website field, no
+  // picker, no session-landing) and would now always fail server-side
+  // since website became a hard requirement. Rather than duplicate all of
+  // that logic a second time here, forever, one real implementation.
+  function openAgency(){ window.location.assign('/?agency=1'); }
   function closeAgency(){ var el=$('rfcp-agency-overlay'); if(el) el.classList.remove('open'); }
   var headerRight=document.querySelector('.header-right');
   if(headerRight && !$('agency-login-header')){
