@@ -61,7 +61,7 @@ export default async function handler(request, context) {
       <div class="rfcp-agency-field"><label for="rfcp-agency-agency">Agency Name</label><input id="rfcp-agency-agency" name="agency_name" type="text" autocomplete="organization" required></div>
       <div class="rfcp-agency-field"><label for="rfcp-agency-business">Business Name</label><input id="rfcp-agency-business" name="business_name" type="text" required></div>
       <div class="rfcp-agency-field"><label for="rfcp-agency-email">Business Email</label><input id="rfcp-agency-email" name="business_email" type="email" autocomplete="email" required></div>
-      <div class="rfcp-agency-field"><label for="rfcp-agency-promo">Promo Code</label><input id="rfcp-agency-promo" name="promo_code" type="text" value="AGENCY 30" autocomplete="off" required></div>
+      <div class="rfcp-agency-field"><label for="rfcp-agency-promo">Promo Code</label><input id="rfcp-agency-promo" name="promo_code" type="text" autocomplete="off" placeholder="Enter your promo code" required></div>
       <button class="rfcp-agency-submit" type="submit" id="rfcp-agency-submit">Submit Agency Access</button>
       <div id="rfcp-agency-msg" aria-live="polite"></div>
     </form>

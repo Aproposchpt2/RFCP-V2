@@ -147,7 +147,7 @@ export default async (request, context) => {
     <form id="rfcp-agency-form" novalidate>
       <div class="rfcp-agency-field"><label for="rfcp-agency-name">Advisor Name</label><input id="rfcp-agency-name" type="text" autocomplete="name" required></div>
       <div class="rfcp-agency-field"><label for="rfcp-agency-agency">Agency Name</label><input id="rfcp-agency-agency" type="text" autocomplete="organization" required></div>
-      <div class="rfcp-agency-field"><label for="rfcp-agency-promo">Promo Code</label><input id="rfcp-agency-promo" type="text" value="AGENCY 30" autocomplete="off" required></div>
+      <div class="rfcp-agency-field"><label for="rfcp-agency-promo">Promo Code</label><input id="rfcp-agency-promo" type="text" autocomplete="off" placeholder="Enter your promo code" required></div>
       <div class="rfcp-agency-separator">Clients Business Info</div>
       <div class="rfcp-agency-field"><label for="rfcp-agency-business">Client's Business Name</label><input id="rfcp-agency-business" type="text" autocomplete="organization" required></div>
       <div class="rfcp-agency-field"><label for="rfcp-agency-website">Business Website URL</label><div class="rfcp-agency-url"><span>https://</span><input id="rfcp-agency-website" type="text" inputmode="url" autocomplete="url" autocapitalize="none" spellcheck="false" placeholder="www.acme.com" required></div></div>
@@ -172,6 +172,11 @@ export default async (request, context) => {
   if(closeBtn)closeBtn.addEventListener('click',closeAgency);
   if(overlay)overlay.addEventListener('click',function(e){if(e.target===overlay)closeAgency();});
   document.addEventListener('keydown',function(e){if(e.key==='Escape')closeAgency();});
+  // The dashboard's own "AGENCY LOGIN" buttons redirect here with ?agency=1
+  // instead of keeping a second copy of this modal in sync forever (see
+  // rfcp-dashboard-enhancements.js) -- auto-open so the click-through still
+  // feels seamless.
+  try{if(new URLSearchParams(location.search).get('agency')==='1')openAgency();}catch(e){}
   if(!form)return;
   var msg=document.getElementById('rfcp-agency-msg');
   var submit=document.getElementById('rfcp-agency-submit');
