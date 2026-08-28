@@ -197,7 +197,7 @@ export default async (request, context) => {
     picker.classList.add('on');
     picker.innerHTML=candidates.map(function(c,i){
       return '<button type="button" class="rfcp-agency-candidate" data-i="'+i+'"><b>'+(c.legal_name||'Unknown business')+'</b><span>'+[c.city,c.state].filter(Boolean).join(', ')+'</span></button>';
-    }).join('')+'<p style="color:rgba(255,255,255,.5);font-size:.76rem;text-align:center;margin:6px 0 0">Nat-Corp found more than one active registration under that name. Which one is this?</p>';
+    }).join('')+'<p style="color:rgba(255,255,255,.5);font-size:.76rem;text-align:center;margin:6px 0 0">Federal Contract Portal found more than one active registration under that name. Which one is this?</p>';
     Array.prototype.forEach.call(picker.querySelectorAll('.rfcp-agency-candidate'),function(el,i){
       el.addEventListener('click',function(){
         Array.prototype.forEach.call(picker.querySelectorAll('.rfcp-agency-candidate'),function(b){b.disabled=true;});

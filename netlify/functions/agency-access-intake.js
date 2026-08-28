@@ -196,7 +196,7 @@ exports.handler = async (event) => {
         return reply(200, {
           ok: true,
           matched: 'none',
-          message: `Nat-Corp could not find "${businessName}" as an active registered federal contractor. Only registered federal contractors have a dashboard on Federal Contract Portal today -- double-check the legal business name, or have them complete federal registration first.`,
+          message: `Federal Contract Portal could not find "${businessName}" as an active registered federal contractor. Only registered federal contractors have a dashboard here today -- double-check the legal business name, or have them complete federal registration first.`,
         });
       }
       if (candidates.length > 1) {
