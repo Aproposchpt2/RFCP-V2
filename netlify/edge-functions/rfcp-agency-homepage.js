@@ -123,6 +123,12 @@ export default async (request, context) => {
 #rfcp-agency-msg{min-height:20px;margin-top:11px;font-size:.82rem;text-align:center;color:rgba(255,255,255,.52)}
 #rfcp-agency-msg.ok{color:#3EE391}
 #rfcp-agency-msg.err{color:#ff8a8a}
+#rfcp-agency-picker{display:none;margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,.14)}
+#rfcp-agency-picker.on{display:block}
+.rfcp-agency-candidate{display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%;text-align:left;border:1px solid rgba(255,255,255,.16);border-radius:8px;background:rgba(255,255,255,.06);color:#fff;padding:.75rem .95rem;cursor:pointer;margin-bottom:8px;font-family:var(--body)}
+.rfcp-agency-candidate:hover{border-color:#D5AA4D}
+.rfcp-agency-candidate b{font-weight:700;font-size:.86rem}
+.rfcp-agency-candidate span{color:rgba(255,255,255,.5);font-size:.74rem;white-space:nowrap}
 @media(max-width:620px){.top-in{gap:10px}.rfcp-home-nav-actions{gap:5px}.rfcp-home-agency-btn,.rfcp-home-nav-actions .nav-cta{padding:.48rem .7rem;font-size:.58rem;letter-spacing:.08em}.rfcp-agency-card{padding:26px 20px}.rfcp-mission-copy{font-size:.9rem;line-height:1.6}.rfcp-mission-copy p{margin-bottom:.7rem}.rfcp-mission-tagline{font-size:1.05rem}.rfcp-trial-pill{font-size:.68rem;padding:.75rem 1.25rem}}
 </style>`;
 
@@ -141,6 +147,7 @@ export default async (request, context) => {
       <div class="rfcp-agency-field"><label for="rfcp-agency-business">Client's Business Name</label><input id="rfcp-agency-business" type="text" autocomplete="organization" required></div>
       <button class="rfcp-agency-submit" type="submit" id="rfcp-agency-submit">Submit Agency Access</button>
       <div id="rfcp-agency-msg" aria-live="polite"></div>
+      <div id="rfcp-agency-picker"></div>
     </form>
   </div>
 </div>`;
@@ -160,26 +167,82 @@ export default async (request, context) => {
   if(overlay)overlay.addEventListener('click',function(e){if(e.target===overlay)closeAgency();});
   document.addEventListener('keydown',function(e){if(e.key==='Escape')closeAgency();});
   if(!form)return;
+  var msg=document.getElementById('rfcp-agency-msg');
+  var submit=document.getElementById('rfcp-agency-submit');
+  var picker=document.getElementById('rfcp-agency-picker');
+
+  // Fresh session every time -- an agency lookup never inherits a previous
+  // client's dashboard state on a shared browser. Cleared the moment the
+  // modal is opened, before any submission, not just before a new success.
+  function clearPriorSession(){
+    try{
+      localStorage.removeItem('capgen_email');
+      localStorage.removeItem('capgen_session');
+      localStorage.removeItem('pipeline_session');
+      sessionStorage.removeItem('pipeline_session');
+    }catch(e){}
+  }
+  if(openBtn)openBtn.addEventListener('click',clearPriorSession);
+
+  function landOnDashboard(email,sessionToken){
+    clearPriorSession();
+    try{
+      localStorage.setItem('capgen_email',email);
+      sessionStorage.setItem('pipeline_session',sessionToken);
+    }catch(e){}
+    window.location.assign('/apropos');
+  }
+
+  function renderPicker(candidates,basePayload){
+    picker.classList.add('on');
+    picker.innerHTML=candidates.map(function(c,i){
+      return '<button type="button" class="rfcp-agency-candidate" data-i="'+i+'"><b>'+(c.legal_name||'Unknown business')+'</b><span>'+[c.city,c.state].filter(Boolean).join(', ')+'</span></button>';
+    }).join('')+'<p style="color:rgba(255,255,255,.5);font-size:.76rem;text-align:center;margin:6px 0 0">Nat-Corp found more than one active registration under that name. Which one is this?</p>';
+    Array.prototype.forEach.call(picker.querySelectorAll('.rfcp-agency-candidate'),function(el,i){
+      el.addEventListener('click',function(){
+        Array.prototype.forEach.call(picker.querySelectorAll('.rfcp-agency-candidate'),function(b){b.disabled=true;});
+        msg.className='';msg.textContent='';
+        var selectPayload={name:basePayload.name,agency_name:basePayload.agency_name,business_name:basePayload.business_name,promo_code:basePayload.promo_code,uei:candidates[i].uei};
+        fetch('/.netlify/functions/agency-access-intake',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(selectPayload)})
+          .then(function(r){return r.json().then(function(j){return {ok:r.ok,j:j};});})
+          .then(function(res){
+            if(!res.ok)throw new Error((res.j&&res.j.error)||'That request could not be completed.');
+            picker.classList.remove('on');picker.innerHTML='';
+            msg.className='ok';msg.textContent=res.j.message||'Access activated.';
+            if(res.j.email&&res.j.session_token)setTimeout(function(){landOnDashboard(res.j.email,res.j.session_token);},500);
+          })
+          .catch(function(err){
+            msg.className='err';msg.textContent=err.message;
+            Array.prototype.forEach.call(picker.querySelectorAll('.rfcp-agency-candidate'),function(b){b.disabled=false;});
+          });
+      });
+    });
+  }
+
   form.addEventListener('submit',function(e){
     e.preventDefault();
-    var msg=document.getElementById('rfcp-agency-msg');
-    var submit=document.getElementById('rfcp-agency-submit');
+    msg.className='';msg.textContent='';
+    picker.classList.remove('on');picker.innerHTML='';
     var payload={
       name:document.getElementById('rfcp-agency-name').value.trim(),
       agency_name:document.getElementById('rfcp-agency-agency').value.trim(),
       business_name:document.getElementById('rfcp-agency-business').value.trim(),
       promo_code:document.getElementById('rfcp-agency-promo').value.trim()
     };
-    msg.className='';msg.textContent='';
     if(!payload.name||!payload.agency_name||!payload.business_name||!payload.promo_code){msg.className='err';msg.textContent='Complete all fields.';return;}
     submit.disabled=true;submit.textContent='Submitting…';
     fetch('/.netlify/functions/agency-access-intake',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
       .then(function(r){return r.json().then(function(j){return {ok:r.ok,j:j};});})
       .then(function(res){
         if(!res.ok)throw new Error((res.j&&res.j.error)||'Agency access request failed.');
+        if(res.j.matched==='multiple'){renderPicker(res.j.candidates,payload);return;}
         msg.className='ok';
         msg.textContent=res.j.message||'Agency access activated.';
-        if(res.j.redirect)setTimeout(function(){window.location.assign(res.j.redirect);},700);
+        if(res.j.matched==='single'&&res.j.email&&res.j.session_token){
+          setTimeout(function(){landOnDashboard(res.j.email,res.j.session_token);},500);
+        }else if(res.j.matched==='none'){
+          msg.className='err';
+        }
       })
       .catch(function(err){msg.className='err';msg.textContent=err.message;})
       .finally(function(){submit.disabled=false;submit.textContent='Submit Agency Access';});
