@@ -1,8 +1,19 @@
 // client-naics-add.js
 // Adds one NAICS code to a client's monitored list, persisted so it survives
-// future dashboard loads. Mirrors client-pipeline.js's client-identity
-// resolution (bc:/cg:/raw UEI) so the same id used to load the dashboard is
-// used to save into it.
+// future dashboard loads.
+//
+// Does NOT infer the table from the id's shape (bc:/cg:/raw UEI) -- tried
+// that first and it's wrong: fetchDirectCapGenCustomer() in client-pipeline.js
+// returns client.uei as a *raw*, unprefixed UEI whenever the capgen_customers
+// row has a real one on file, which is indistinguishable by shape from a row
+// actually living in capgen_subscriptions (reached via a plain ?uei= request).
+// Confirmed live 2026-08-27: a real account resolved through capgen_customers
+// with UEI YVNXN3XBUSD5 -- prefix-based routing sent the write to
+// capgen_subscriptions instead, which happened to have an unrelated row with
+// the same UEI, so the call "succeeded" while silently updating the wrong
+// record. The caller now sends the exact `source` client-pipeline.js already
+// resolved (capgen_customers / capgen_subscriptions / biz_center_members),
+// and this matches each source the same way client-pipeline.js queried it.
 'use strict';
 
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://judislfknmhofcgzyozc.supabase.co';
@@ -23,15 +34,20 @@ exports.handler = async (event) => {
   let payload;
   try { payload = JSON.parse(event.body || '{}'); } catch { return { statusCode: 400, headers, body: JSON.stringify({ error: 'Invalid request.' }) }; }
 
-  const id = String(payload.id || '').trim();
+  const source = String(payload.source || '').trim();
+  const email = String(payload.email || '').trim().toLowerCase();
+  const uei = String(payload.uei || '').trim();
   const code = String(payload.naics || '').trim();
-  if (!id) return { statusCode: 400, headers, body: JSON.stringify({ error: 'Missing client id.' }) };
   if (!/^\d{6}$/.test(code)) return { statusCode: 400, headers, body: JSON.stringify({ error: 'NAICS code must be exactly 6 digits.' }) };
 
+  // Matches each source exactly how client-pipeline.js itself queries it:
+  // capgen_customers and biz_center_members by email, capgen_subscriptions by uei.
   let table, matchColumn, matchValue;
-  if (id.startsWith('bc:')) { table = 'biz_center_members'; matchColumn = 'email'; matchValue = id.slice(3); }
-  else if (id.startsWith('cg:')) { table = 'capgen_customers'; matchColumn = 'email'; matchValue = id.slice(3); }
-  else { table = 'capgen_subscriptions'; matchColumn = 'uei'; matchValue = id; }
+  if (source === 'capgen_customers') { table = 'capgen_customers'; matchColumn = 'email'; matchValue = email; }
+  else if (source === 'bc_member' || source === 'biz_center_members') { table = 'biz_center_members'; matchColumn = 'email'; matchValue = email; }
+  else if (source === 'capgen_subscriptions' || source === 'capgen_subscriber') { table = 'capgen_subscriptions'; matchColumn = 'uei'; matchValue = uei; }
+  else return { statusCode: 400, headers, body: JSON.stringify({ error: 'Unrecognized client source.' }) };
+  if (!matchValue) return { statusCode: 400, headers, body: JSON.stringify({ error: 'Missing client identifier for that source.' }) };
 
   try {
     const getRes = await fetch(

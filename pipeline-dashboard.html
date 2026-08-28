@@ -279,6 +279,8 @@ header{background:var(--surface);border-bottom:1px solid var(--line);padding:14p
 <script>
 // UEI resolved after auth — see resolveUEI()
 let UEI = null;
+let AUTH_EMAIL = null;
+let CLIENT_SOURCE = null;
 // Update header with client's business name if available
 (function(){const biz=sessionStorage.getItem('capgen_biz');if(biz){const t=document.querySelector('.dash-mock-title em');if(t)t.textContent=biz;}})();
 let allOpps = [];
@@ -381,6 +383,7 @@ async function load() {
     allOpps      = data.opportunities || [];
     naicsClient  = data.client.naics  || [];
     UEI          = data.client.uei || UEI;
+    CLIENT_SOURCE = data.client.source || CLIENT_SOURCE;
 
     renderRibbon(naicsClient);
 
@@ -468,7 +471,7 @@ naicsAddForm.addEventListener('submit', async (e) => {
   try {
     const res = await fetch('/.netlify/functions/client-naics-add', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: UEI, naics: code }),
+      body: JSON.stringify({ source: CLIENT_SOURCE, uei: UEI, email: AUTH_EMAIL, naics: code }),
     });
     const data = await res.json();
     if (!res.ok || !data.ok) throw new Error(data.error || 'Could not save.');
@@ -538,6 +541,7 @@ async function resolveUEI(email) {
 })();
 
 function showApp(email) {
+  AUTH_EMAIL = email;
   document.getElementById('auth-gate').style.display = 'none';
   document.getElementById('auth-app').style.display  = 'block';
   const hdr = document.querySelector('.header-right');

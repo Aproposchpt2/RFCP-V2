@@ -551,7 +551,7 @@ function signOut() {
 // ── App state ─────────────────────────────────────────────────────────────────
 var allOpps = [], filteredOpps = [], renderedOpps = [];
 var activeNaics = [];
-var clientId = '';
+var clientSource = '', clientUei = '';
 var windowDays  = 0;
 var analysisCache = {};
 var currentOpp  = null;
@@ -703,7 +703,8 @@ function loadFederal() {
       document.getElementById('ec-naics-count').textContent = (cl.naics || d.naics || []).length + ' codes';
       document.getElementById('ec-refresh').textContent = 'Today';
       // Build NAICS ribbon
-      clientId = cl.uei || d.uei || ('bc:' + getEmail());
+      clientSource = cl.source || d.source || '';
+      clientUei = cl.uei || d.uei || '';
       activeNaics = (cl.naics || d.naics || []).slice();
       buildNaicsRibbon(cl.naics || d.naics || []);
       // Store opps
@@ -787,7 +788,7 @@ function toggleNaics(el, code) {
     submitBtn.disabled = true; addNote.textContent = 'Saving…';
     fetch('/.netlify/functions/client-naics-add', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: clientId, naics: code }),
+      body: JSON.stringify({ source: clientSource, uei: clientUei, email: getEmail(), naics: code }),
     })
       .then(function(r) { return r.json().then(function(data) { return { ok: r.ok, data: data }; }); })
       .then(function(result) {
