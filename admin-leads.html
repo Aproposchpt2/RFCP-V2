@@ -90,6 +90,25 @@ tr:hover td{background:rgba(91,175,255,.04)}
 
 <div class="page">
 
+  <!-- RFCP account health -- real customers/subscribers, not imported SAM.gov leads -->
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px;flex-wrap:wrap">
+    <h2 style="font-size:.92rem;color:var(--text)">RFCP Account Health</h2>
+    <div id="acctKeyRow" style="display:flex;gap:8px;align-items:center">
+      <input type="password" id="acctAdminKey" placeholder="Admin key" style="background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:8px;color:var(--text);padding:7px 11px;font-size:.78rem;outline:none">
+      <button id="acctLoadBtn" style="background:var(--cyan);color:#0A1A3A;border:none;border-radius:8px;padding:7px 14px;font-weight:700;font-size:.78rem;cursor:pointer">Load</button>
+    </div>
+  </div>
+  <div class="stat-bar" id="acctStatBar" style="margin-bottom:14px">
+    <div class="stat"><div class="stat-val" id="a-total">—</div><div class="stat-label">Total Accounts</div></div>
+    <div class="stat"><div class="stat-val green" id="a-active">—</div><div class="stat-label">Active</div></div>
+    <div class="stat"><div class="stat-val green" id="a-complete">—</div><div class="stat-label">Profile Complete</div></div>
+    <div class="stat"><div class="stat-val amber" id="a-incomplete">—</div><div class="stat-label">Needs Onboarding</div></div>
+  </div>
+  <div id="acctIncompleteWrap" style="display:none;margin-bottom:28px">
+    <div style="font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;color:var(--soft);margin-bottom:8px">Active accounts with no NAICS/UEI on file yet</div>
+    <div id="acctIncompleteList" style="display:flex;flex-direction:column;gap:6px"></div>
+  </div>
+
   <!-- Stats -->
   <div class="stat-bar" id="statBar">
     <div class="stat"><div class="stat-val" id="s-total">—</div><div class="stat-label">Total Contractors</div></div>
@@ -167,6 +186,56 @@ if (!sessOk && !hasToken) {
     + '</div>';
   throw new Error('not authorized');
 }
+
+// RFCP account health -- separate data source (real customers/subscribers)
+// from the SAM.gov lead list below, so it's wired up independently.
+(function() {
+  const keyInput = document.getElementById('acctAdminKey');
+  const loadBtn = document.getElementById('acctLoadBtn');
+  const cachedKey = sessionStorage.getItem('rfcp_admin_key');
+  if (cachedKey) keyInput.value = cachedKey;
+
+  function esc(s) { return String(s || '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
+
+  async function loadAccountHealth() {
+    const key = keyInput.value.trim();
+    if (!key) return;
+    loadBtn.disabled = true; loadBtn.textContent = 'Loading…';
+    try {
+      const res = await fetch('/.netlify/functions/admin-account-stats', { headers: { 'X-Admin-Key': key } });
+      const data = await res.json();
+      if (!res.ok || !data.ok) throw new Error(data.error || 'Failed to load.');
+      sessionStorage.setItem('rfcp_admin_key', key);
+
+      document.getElementById('a-total').textContent = data.total_accounts;
+      document.getElementById('a-active').textContent = data.active_accounts;
+      document.getElementById('a-complete').textContent = data.complete_profiles;
+      document.getElementById('a-incomplete').textContent = data.incomplete_profiles;
+
+      const wrap = document.getElementById('acctIncompleteWrap');
+      const list = document.getElementById('acctIncompleteList');
+      if (data.incomplete.length) {
+        wrap.style.display = 'block';
+        list.innerHTML = data.incomplete.map(a => `
+          <div style="background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:8px;padding:9px 14px;font-size:.82rem;display:flex;gap:14px;align-items:center;flex-wrap:wrap">
+            <strong style="color:var(--text)">${esc(a.business_name || a.email)}</strong>
+            <span style="color:var(--muted)">${esc(a.email)}</span>
+            <span style="color:var(--soft);margin-left:auto;font-size:.72rem">${esc(a.source)} · ${a.has_uei ? 'has UEI' : 'no UEI'} · ${a.naics_count} NAICS</span>
+          </div>`).join('');
+      } else {
+        wrap.style.display = 'none';
+      }
+    } catch (e) {
+      alert(e.message || 'Could not load account health.');
+    } finally {
+      loadBtn.disabled = false; loadBtn.textContent = 'Load';
+    }
+  }
+
+  loadBtn.addEventListener('click', loadAccountHealth);
+  keyInput.addEventListener('keydown', e => { if (e.key === 'Enter') loadAccountHealth(); });
+  if (cachedKey) loadAccountHealth();
+})();
 
 let allData     = [];
 let betaEmails  = new Set();
