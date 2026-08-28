@@ -117,6 +117,11 @@ export default async (request, context) => {
 .rfcp-agency-field label{display:block;font-size:.62rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.46);margin-bottom:6px}
 .rfcp-agency-field input{width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.16);border-radius:8px;color:#fff;padding:11px 12px;font-family:var(--body);font-size:.9rem;outline:none}
 .rfcp-agency-field input:focus{border-color:#D5AA4D}
+.rfcp-agency-url{display:flex;align-items:stretch;border:1px solid rgba(255,255,255,.16);border-radius:8px;background:rgba(255,255,255,.06);overflow:hidden}
+.rfcp-agency-url:focus-within{border-color:#D5AA4D}
+.rfcp-agency-url span{display:flex;align-items:center;padding:0 0 0 12px;color:rgba(255,255,255,.5);font-size:.9rem;white-space:nowrap}
+.rfcp-agency-url input{min-width:0;border:0;border-radius:0;background:transparent;padding:11px 12px 11px 4px}
+.rfcp-agency-url input:focus{border:0;box-shadow:none}
 .rfcp-agency-submit{width:100%;margin-top:4px;background:linear-gradient(135deg,#D5AA4D,#E8C982);color:#0F2A6A;border:none;border-radius:8px;padding:12px 16px;font-family:var(--body);font-size:.76rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;cursor:pointer}
 .rfcp-agency-submit:disabled{opacity:.55;cursor:wait}
 .rfcp-agency-separator{margin:18px 0 14px;padding-top:16px;border-top:1px solid rgba(255,255,255,.14);font-size:.62rem;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:#D5AA4D;text-align:center}
@@ -145,6 +150,7 @@ export default async (request, context) => {
       <div class="rfcp-agency-field"><label for="rfcp-agency-promo">Promo Code</label><input id="rfcp-agency-promo" type="text" value="AGENCY 30" autocomplete="off" required></div>
       <div class="rfcp-agency-separator">Clients Business Info</div>
       <div class="rfcp-agency-field"><label for="rfcp-agency-business">Client's Business Name</label><input id="rfcp-agency-business" type="text" autocomplete="organization" required></div>
+      <div class="rfcp-agency-field"><label for="rfcp-agency-website">Business Website URL</label><div class="rfcp-agency-url"><span>https://</span><input id="rfcp-agency-website" type="text" inputmode="url" autocomplete="url" autocapitalize="none" spellcheck="false" placeholder="www.acme.com" required></div></div>
       <button class="rfcp-agency-submit" type="submit" id="rfcp-agency-submit">Submit Agency Access</button>
       <div id="rfcp-agency-msg" aria-live="polite"></div>
       <div id="rfcp-agency-picker"></div>
@@ -202,7 +208,7 @@ export default async (request, context) => {
       el.addEventListener('click',function(){
         Array.prototype.forEach.call(picker.querySelectorAll('.rfcp-agency-candidate'),function(b){b.disabled=true;});
         msg.className='';msg.textContent='';
-        var selectPayload={name:basePayload.name,agency_name:basePayload.agency_name,business_name:basePayload.business_name,promo_code:basePayload.promo_code,uei:candidates[i].uei};
+        var selectPayload={name:basePayload.name,agency_name:basePayload.agency_name,business_name:basePayload.business_name,promo_code:basePayload.promo_code,website:basePayload.website,uei:candidates[i].uei};
         fetch('/.netlify/functions/agency-access-intake',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(selectPayload)})
           .then(function(r){return r.json().then(function(j){return {ok:r.ok,j:j};});})
           .then(function(res){
@@ -219,6 +225,10 @@ export default async (request, context) => {
     });
   }
 
+  var websiteInput=document.getElementById('rfcp-agency-website');
+  if(websiteInput)websiteInput.addEventListener('input',function(){var cleaned=websiteInput.value.replace(/^\s*https?:\/\//i,'').replace(/^\/+/,'');if(cleaned!==websiteInput.value)websiteInput.value=cleaned;});
+  function websiteUrl(value){return 'https://'+String(value||'').trim().replace(/^https?:\/\//i,'').replace(/^\/+/,'');}
+
   form.addEventListener('submit',function(e){
     e.preventDefault();
     msg.className='';msg.textContent='';
@@ -230,6 +240,10 @@ export default async (request, context) => {
       promo_code:document.getElementById('rfcp-agency-promo').value.trim()
     };
     if(!payload.name||!payload.agency_name||!payload.business_name||!payload.promo_code){msg.className='err';msg.textContent='Complete all fields.';return;}
+    var parsedWebsite;
+    try{parsedWebsite=new URL(websiteUrl(websiteInput?websiteInput.value:''))}catch(err){msg.className='err';msg.textContent='Enter a valid business website name.';return}
+    if(parsedWebsite.protocol!=='https:'||!parsedWebsite.hostname||!parsedWebsite.hostname.includes('.')){msg.className='err';msg.textContent='Enter a valid business website name.';return}
+    payload.website=parsedWebsite.href;
     submit.disabled=true;submit.textContent='Submitting…';
     fetch('/.netlify/functions/agency-access-intake',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
       .then(function(r){return r.json().then(function(j){return {ok:r.ok,j:j};});})

@@ -66,6 +66,23 @@ function slug(value) {
   return String(value || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60) || 'business';
 }
 
+// Per Jeff 2026-08-28: "add the Business URL to this intake form" -- the two
+// sites use different search methods to build the services profile (NAT-CORP
+// searches the business's own website; this SAM.gov entity lookup is
+// name-based), but the URL is captured here too for the client record. Never
+// trust client-side-only validation -- re-validated server-side, same shape
+// NAT-CORP's normalizeWebsite() uses.
+function normalizeWebsite(value) {
+  let raw = clean(value, 700);
+  if (!raw) return null;
+  if (!/^https?:\/\//i.test(raw)) raw = `https://${raw}`;
+  let url;
+  try { url = new URL(raw); } catch { return null; }
+  if (url.protocol !== 'https:' || !url.hostname || !url.hostname.includes('.')) return null;
+  url.hash = '';
+  return url.href;
+}
+
 async function samFetch(params) {
   if (!SAM_API_KEY) throw new Error('Federal registration lookup is not configured.');
   const url = new URL(SAM_ENTITY_URL);
@@ -110,19 +127,19 @@ async function fetchEntityRecord(uei) {
   };
 }
 
-async function logAttempt({ advisorName, agencyName, businessName, uei, matched }) {
+async function logAttempt({ advisorName, agencyName, businessName, businessWebsite, uei, matched }) {
   try {
     await fetch(`${SUPABASE_URL}/rest/v1/rfcp_agency_pilot_logins`, {
       method: 'POST',
       headers: sbHeaders({ Prefer: 'return=minimal' }),
-      body: JSON.stringify([{ advisor_name: advisorName, agency_name: agencyName, code_used: PROMO_CODE, business_name: businessName, uei: uei || null, matched }]),
+      body: JSON.stringify([{ advisor_name: advisorName, agency_name: agencyName, code_used: PROMO_CODE, business_name: businessName, business_website: businessWebsite || null, uei: uei || null, matched }]),
     });
   } catch (err) {
     console.error('[agency-access-intake] pilot-login logging failed', err);
   }
 }
 
-async function landClientOnDashboard({ businessName, entity }) {
+async function landClientOnDashboard({ businessName, businessWebsite, entity }) {
   const email = `agency+${slug(entity.legal_name || businessName)}-${entity.uei.toLowerCase()}@rfcp-v2.internal`;
   const now = new Date().toISOString();
 
@@ -136,6 +153,7 @@ async function landClientOnDashboard({ businessName, entity }) {
       email,
       full_name: entity.legal_name || businessName,
       business_name: entity.legal_name || businessName,
+      website: businessWebsite || null,
       city: entity.city,
       state: entity.state,
       subscription_status: 'active',
@@ -180,9 +198,13 @@ exports.handler = async (event) => {
   const businessName = clean(body.business_name, 240);
   const promoCode = canonicalCode(body.promo_code);
   const selectedUei = clean(body.uei, 32);
+  const businessWebsite = normalizeWebsite(body.website);
 
   if (!advisorName || !agencyName || !businessName || !promoCode) {
     return reply(400, { error: 'Advisor name, agency name, business name, and promo code are required.' });
+  }
+  if (!businessWebsite) {
+    return reply(400, { error: 'Enter a valid business website URL.' });
   }
   if (promoCode !== PROMO_CODE) {
     return reply(403, { error: 'Promo code not recognized.' });
@@ -193,7 +215,7 @@ exports.handler = async (event) => {
     if (!uei) {
       const candidates = await searchByName(businessName);
       if (!candidates.length) {
-        await logAttempt({ advisorName, agencyName, businessName, uei: null, matched: 'none' });
+        await logAttempt({ advisorName, agencyName, businessName, businessWebsite, uei: null, matched: 'none' });
         return reply(200, {
           ok: true,
           matched: 'none',
@@ -201,7 +223,7 @@ exports.handler = async (event) => {
         });
       }
       if (candidates.length > 1) {
-        await logAttempt({ advisorName, agencyName, businessName, uei: null, matched: 'multiple' });
+        await logAttempt({ advisorName, agencyName, businessName, businessWebsite, uei: null, matched: 'multiple' });
         return reply(200, { ok: true, matched: 'multiple', candidates });
       }
       uei = candidates[0].uei;
@@ -209,12 +231,12 @@ exports.handler = async (event) => {
 
     const entity = await fetchEntityRecord(uei);
     if (!entity) {
-      await logAttempt({ advisorName, agencyName, businessName, uei, matched: 'entity_not_found' });
+      await logAttempt({ advisorName, agencyName, businessName, businessWebsite, uei, matched: 'entity_not_found' });
       return reply(404, { error: 'That registration could not be retrieved. Try again.' });
     }
 
-    const { email, sessionToken } = await landClientOnDashboard({ businessName, entity });
-    await logAttempt({ advisorName, agencyName, businessName: entity.legal_name || businessName, uei: entity.uei, matched: 'single' });
+    const { email, sessionToken } = await landClientOnDashboard({ businessName, businessWebsite, entity });
+    await logAttempt({ advisorName, agencyName, businessName: entity.legal_name || businessName, businessWebsite, uei: entity.uei, matched: 'single' });
 
     if (RESEND_KEY) {
       const html = `
@@ -226,6 +248,7 @@ exports.handler = async (event) => {
             <tr><td style="padding:8px 0;color:#8facd0;width:170px">Advisor Name</td><td>${esc(advisorName)}</td></tr>
             <tr><td style="padding:8px 0;color:#8facd0">Agency Name</td><td>${esc(agencyName)}</td></tr>
             <tr><td style="padding:8px 0;color:#8facd0">Client Business</td><td>${esc(entity.legal_name || businessName)}</td></tr>
+            <tr><td style="padding:8px 0;color:#8facd0">Business Website</td><td>${esc(businessWebsite)}</td></tr>
             <tr><td style="padding:8px 0;color:#8facd0">UEI</td><td>${esc(entity.uei)}</td></tr>
             <tr><td style="padding:8px 0;color:#8facd0">Activated</td><td>${esc(new Date().toISOString())}</td></tr>
           </table>
