@@ -119,6 +119,7 @@ export default async (request, context) => {
 .rfcp-agency-field input:focus{border-color:#D5AA4D}
 .rfcp-agency-submit{width:100%;margin-top:4px;background:linear-gradient(135deg,#D5AA4D,#E8C982);color:#0F2A6A;border:none;border-radius:8px;padding:12px 16px;font-family:var(--body);font-size:.76rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;cursor:pointer}
 .rfcp-agency-submit:disabled{opacity:.55;cursor:wait}
+.rfcp-agency-separator{margin:18px 0 14px;padding-top:16px;border-top:1px solid rgba(255,255,255,.14);font-size:.62rem;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:#D5AA4D;text-align:center}
 #rfcp-agency-msg{min-height:20px;margin-top:11px;font-size:.82rem;text-align:center;color:rgba(255,255,255,.52)}
 #rfcp-agency-msg.ok{color:#3EE391}
 #rfcp-agency-msg.err{color:#ff8a8a}
@@ -133,11 +134,11 @@ export default async (request, context) => {
     <h2 class="rfcp-agency-title" id="rfcp-agency-title">Agency Login</h2>
     <p class="rfcp-agency-sub">Enter the agency and business information associated with your access request.</p>
     <form id="rfcp-agency-form" novalidate>
-      <div class="rfcp-agency-field"><label for="rfcp-agency-name">Name</label><input id="rfcp-agency-name" type="text" autocomplete="name" required></div>
+      <div class="rfcp-agency-field"><label for="rfcp-agency-name">Advisor Name</label><input id="rfcp-agency-name" type="text" autocomplete="name" required></div>
       <div class="rfcp-agency-field"><label for="rfcp-agency-agency">Agency Name</label><input id="rfcp-agency-agency" type="text" autocomplete="organization" required></div>
-      <div class="rfcp-agency-field"><label for="rfcp-agency-business">Business Name</label><input id="rfcp-agency-business" type="text" autocomplete="organization" required></div>
-      <div class="rfcp-agency-field"><label for="rfcp-agency-email">Business Email</label><input id="rfcp-agency-email" type="email" autocomplete="email" required></div>
       <div class="rfcp-agency-field"><label for="rfcp-agency-promo">Promo Code</label><input id="rfcp-agency-promo" type="text" value="AGENCY 30" autocomplete="off" required></div>
+      <div class="rfcp-agency-separator">Clients Business Info</div>
+      <div class="rfcp-agency-field"><label for="rfcp-agency-business">Client's Business Name</label><input id="rfcp-agency-business" type="text" autocomplete="organization" required></div>
       <button class="rfcp-agency-submit" type="submit" id="rfcp-agency-submit">Submit Agency Access</button>
       <div id="rfcp-agency-msg" aria-live="polite"></div>
     </form>
@@ -167,20 +168,18 @@ export default async (request, context) => {
       name:document.getElementById('rfcp-agency-name').value.trim(),
       agency_name:document.getElementById('rfcp-agency-agency').value.trim(),
       business_name:document.getElementById('rfcp-agency-business').value.trim(),
-      business_email:document.getElementById('rfcp-agency-email').value.trim().toLowerCase(),
       promo_code:document.getElementById('rfcp-agency-promo').value.trim()
     };
     msg.className='';msg.textContent='';
-    if(!payload.name||!payload.agency_name||!payload.business_name||!payload.business_email||!payload.promo_code){msg.className='err';msg.textContent='Complete all fields.';return;}
+    if(!payload.name||!payload.agency_name||!payload.business_name||!payload.promo_code){msg.className='err';msg.textContent='Complete all fields.';return;}
     submit.disabled=true;submit.textContent='Submitting…';
     fetch('/.netlify/functions/agency-access-intake',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
       .then(function(r){return r.json().then(function(j){return {ok:r.ok,j:j};});})
       .then(function(res){
         if(!res.ok)throw new Error((res.j&&res.j.error)||'Agency access request failed.');
         msg.className='ok';
-        msg.textContent='Agency access activated. Opening secure login…';
-        var email=payload.business_email;
-        setTimeout(function(){window.location.assign('/onboarding?agency=1&email='+encodeURIComponent(email));},700);
+        msg.textContent=res.j.message||'Agency access activated.';
+        if(res.j.redirect)setTimeout(function(){window.location.assign(res.j.redirect);},700);
       })
       .catch(function(err){msg.className='err';msg.textContent=err.message;})
       .finally(function(){submit.disabled=false;submit.textContent='Submit Agency Access';});
