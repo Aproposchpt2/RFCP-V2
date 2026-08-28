@@ -51,6 +51,24 @@ header{background:var(--surface);border-bottom:1px solid var(--line);padding:14p
 .naics-bubble.inactive{opacity:.38;border-color:transparent}
 .nb-code{font-size:.75rem;font-weight:900;color:var(--muted);letter-spacing:.04em;line-height:1}
 .nb-label{font-size:.6rem;color:var(--soft);text-align:center;line-height:1.2;max-width:80px}
+.naics-bubble.custom .nb-code{color:var(--gold)}
+.naics-bubble.custom.active{border-color:var(--gold);box-shadow:0 0 10px rgba(217,164,91,.2)}
+.naics-bubble.custom.active .nb-code{color:var(--gold)}
+.naics-add-btn{display:inline-flex;align-items:center;gap:5px;padding:7px 13px;border-radius:20px;cursor:pointer;
+  border:1px dashed var(--line2);background:none;color:var(--soft);font-size:.72rem;font-weight:700;
+  font-family:inherit;transition:.18s;letter-spacing:.02em}
+.naics-add-btn:hover{border-color:var(--cyan);color:var(--cyan);background:rgba(91,211,255,.06)}
+.naics-add-form{display:inline-flex;align-items:center;gap:6px}
+.naics-add-form input{width:96px;padding:6px 10px;border-radius:20px;border:1px solid var(--line2);
+  background:var(--surface);color:var(--text);font-size:.78rem;font-family:inherit;letter-spacing:.03em}
+.naics-add-form input:focus{outline:none;border-color:var(--cyan)}
+.naics-add-form button{padding:6px 13px;border-radius:20px;border:none;background:var(--cyan);color:#0A1A3A;
+  font-weight:700;font-size:.72rem;cursor:pointer;font-family:inherit}
+.naics-add-form button:disabled{opacity:.5;cursor:default}
+.naics-add-form .cancel{background:none;color:var(--soft);padding:6px 8px}
+.naics-add-note{font-size:.68rem;color:var(--red);width:100%;margin-top:-4px}
+.naics-add-note.ok{color:var(--green)}
+.hidden{display:none !important}
 
 .opp-table{width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
 .opp-table th{font-size:.64rem;text-transform:uppercase;letter-spacing:.1em;color:var(--soft);padding:11px 14px;text-align:left;border-bottom:1px solid var(--line);background:rgba(255,255,255,.03)}
@@ -193,7 +211,7 @@ header{background:var(--surface);border-bottom:1px solid var(--line);padding:14p
     <div class="entity-field"><div class="ef-label">Federal Status</div><div class="ef-value active">● Active</div></div>
     <div class="entity-field"><div class="ef-label">Business Type</div><div class="ef-value">Small Business</div></div>
     <div class="entity-field"><div class="ef-label">Location</div><div class="ef-value">Henderson, NV</div></div>
-    <div class="entity-field"><div class="ef-label">Primary NAICS</div><div class="ef-value">541519</div></div>
+    <div class="entity-field"><div class="ef-label">Primary NAICS</div><div class="ef-value" id="primaryNaics">—</div></div>
     <div class="entity-field"><div class="ef-label">NAICS Monitored</div><div class="ef-value" id="naicsCount">—</div></div>
     <div class="entity-field"><div class="ef-label">Last Refreshed</div><div class="ef-value" id="lastRefresh">—</div></div>
     <div style="margin-left:auto"><button onclick="load()" style="background:var(--cyan);color:#0A1A3A;border:none;border-radius:8px;padding:9px 18px;font-weight:700;cursor:pointer;font-size:.82rem">Refresh Pipeline</button></div>
@@ -211,33 +229,14 @@ header{background:var(--surface);border-bottom:1px solid var(--line);padding:14p
   <!-- NAICS ribbon -->
   <div class="naics-ribbon" id="naicsRibbon">
     <span class="naics-ribbon-label">NAICS</span>
-    <div class="naics-bubble active" data-naics="541519">
-      <span class="nb-code">541519 ⭐</span><span class="nb-label">Other IT Services</span>
-    </div>
-    <div class="naics-bubble active" data-naics="541511">
-      <span class="nb-code">541511</span><span class="nb-label">Custom Programming</span>
-    </div>
-    <div class="naics-bubble active" data-naics="541512">
-      <span class="nb-code">541512</span><span class="nb-label">Systems Design</span>
-    </div>
-    <div class="naics-bubble active" data-naics="541513">
-      <span class="nb-code">541513</span><span class="nb-label">IT Facilities Mgmt</span>
-    </div>
-    <div class="naics-bubble active" data-naics="541990">
-      <span class="nb-code">541990</span><span class="nb-label">Professional Svcs</span>
-    </div>
-    <div class="naics-bubble active" data-naics="541690">
-      <span class="nb-code">541690</span><span class="nb-label">Scientific Consulting</span>
-    </div>
-    <div class="naics-bubble active" data-naics="541370">
-      <span class="nb-code">541370</span><span class="nb-label">Surveying & Mapping</span>
-    </div>
-    <div class="naics-bubble active" data-naics="541330">
-      <span class="nb-code">541330</span><span class="nb-label">Engineering Svcs</span>
-    </div>
-    <div class="naics-bubble active" data-naics="517919">
-      <span class="nb-code">517919</span><span class="nb-label">Telecommunications</span>
-    </div>
+    <span id="naicsBubbles"></span>
+    <button type="button" class="naics-add-btn" id="naicsAddBtn">+ Add NAICS</button>
+    <form class="naics-add-form hidden" id="naicsAddForm">
+      <input type="text" inputmode="numeric" maxlength="6" id="naicsAddInput" placeholder="6-digit code" autocomplete="off"/>
+      <button type="submit" id="naicsAddSubmit">Add</button>
+      <button type="button" class="cancel" id="naicsAddCancel">Cancel</button>
+    </form>
+    <div class="naics-add-note hidden" id="naicsAddNote"></div>
   </div>
 
   <div class="controls">
@@ -363,7 +362,7 @@ function applyFilters() {
   const search  = document.getElementById('searchInput').value.toLowerCase();
 
   let filtered = allOpps;
-  if (selectedNaics.length < 9) filtered = filtered.filter(o => selectedNaics.includes(o.naics));
+  if (selectedNaics.length < naicsClient.length) filtered = filtered.filter(o => selectedNaics.includes(o.naics));
   if (search)  filtered = filtered.filter(o =>
     (o.title||'').toLowerCase().includes(search) ||
     (o.agency||'').toLowerCase().includes(search)
@@ -372,7 +371,7 @@ function applyFilters() {
 }
 
 async function load() {
-  document.getElementById('tbody').innerHTML = '<tr><td colspan="7" class="loading">Fetching live opportunities from SAM.gov…</td></tr>';
+  document.getElementById('tbody').innerHTML = '<tr><td colspan="7" class="loading">Fetching live opportunities, sourced from official public records…</td></tr>';
   try {
     const activeDays = document.querySelector('.win-btn.active')?.dataset.days || '60';
     const res  = await fetch(`/.netlify/functions/client-pipeline?uei=${UEI}&days=${activeDays}`);
@@ -381,9 +380,13 @@ async function load() {
 
     allOpps      = data.opportunities || [];
     naicsClient  = data.client.naics  || [];
+    UEI          = data.client.uei || UEI;
+
+    renderRibbon(naicsClient);
 
     // Stats
     document.getElementById('naicsCount').textContent = naicsClient.length;
+    document.getElementById('primaryNaics').textContent = naicsClient[0] || '—';
     document.getElementById('lastRefresh').textContent = new Date().toLocaleTimeString();
     document.getElementById('s-total').textContent = allOpps.length;
     document.getElementById('s-hot').textContent   = allOpps.filter(o => o.urgency === 'hot').length;
@@ -396,17 +399,90 @@ async function load() {
   }
 }
 
-// NAICS bubble toggle
-document.querySelectorAll('.naics-bubble').forEach(b => {
-  b.addEventListener('click', () => {
-    const isActive = b.classList.contains('active');
-    const allActive = document.querySelectorAll('.naics-bubble.active').length;
-    // Don't let the last active bubble be deactivated
-    if (isActive && allActive === 1) return;
-    b.classList.toggle('active');
-    b.classList.toggle('inactive');
+// Friendly labels for the NAICS codes we expect to see often. Any code
+// outside this list still renders fine -- just without a sub-label.
+const NAICS_LABELS = {
+  '541519':'Other IT Services','541511':'Custom Programming','541512':'Systems Design',
+  '541513':'IT Facilities Mgmt','541990':'Professional Svcs','541690':'Scientific Consulting',
+  '541370':'Surveying & Mapping','541330':'Engineering Svcs','517919':'Telecommunications',
+  '238210':'Electrical Contractors','541611':'Mgmt Consulting','541618':'Other Mgmt Consulting',
+  '561210':'Facilities Support','518210':'Data Processing/Hosting',
+};
+
+function renderRibbon(codes) {
+  const wrap = document.getElementById('naicsBubbles');
+  wrap.innerHTML = codes.map((code, i) => {
+    const label = NAICS_LABELS[code];
+    const isKnown = Boolean(label);
+    return `<div class="naics-bubble active${isKnown ? '' : ' custom'}" data-naics="${code}">
+      <span class="nb-code">${code}${i === 0 ? ' ⭐' : ''}</span>
+      ${isKnown ? `<span class="nb-label">${label}</span>` : ''}
+    </div>`;
+  }).join('');
+}
+
+// NAICS bubble toggle -- delegated, since bubbles are rendered dynamically
+document.getElementById('naicsBubbles').addEventListener('click', (e) => {
+  const b = e.target.closest('.naics-bubble');
+  if (!b) return;
+  const isActive = b.classList.contains('active');
+  const allActive = document.querySelectorAll('.naics-bubble.active').length;
+  // Don't let the last active bubble be deactivated
+  if (isActive && allActive === 1) return;
+  b.classList.toggle('active');
+  b.classList.toggle('inactive');
+  applyFilters();
+});
+
+// "+ Add NAICS" -- reveals a small inline form, saves to the client's
+// profile so it persists across future dashboard loads, then reflects it
+// immediately in the ribbon and the opportunity list.
+const naicsAddBtn = document.getElementById('naicsAddBtn');
+const naicsAddForm = document.getElementById('naicsAddForm');
+const naicsAddInput = document.getElementById('naicsAddInput');
+const naicsAddNote = document.getElementById('naicsAddNote');
+
+function closeNaicsAddForm() {
+  naicsAddForm.classList.add('hidden');
+  naicsAddBtn.classList.remove('hidden');
+  naicsAddNote.classList.add('hidden');
+  naicsAddInput.value = '';
+}
+
+naicsAddBtn.addEventListener('click', () => {
+  naicsAddBtn.classList.add('hidden');
+  naicsAddForm.classList.remove('hidden');
+  naicsAddInput.focus();
+});
+document.getElementById('naicsAddCancel').addEventListener('click', closeNaicsAddForm);
+
+naicsAddForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const code = naicsAddInput.value.trim();
+  naicsAddNote.classList.remove('hidden', 'ok');
+  if (!/^\d{6}$/.test(code)) { naicsAddNote.textContent = 'Enter a 6-digit NAICS code.'; return; }
+  if (naicsClient.includes(code)) { naicsAddNote.textContent = 'Already on your list.'; return; }
+
+  const submitBtn = document.getElementById('naicsAddSubmit');
+  submitBtn.disabled = true; naicsAddNote.textContent = 'Saving…';
+  try {
+    const res = await fetch('/.netlify/functions/client-naics-add', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: UEI, naics: code }),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.ok) throw new Error(data.error || 'Could not save.');
+    naicsClient = data.naics;
+    renderRibbon(naicsClient);
+    document.getElementById('naicsCount').textContent = naicsClient.length;
     applyFilters();
-  });
+    closeNaicsAddForm();
+    load(); // pick up opportunities for the newly added code
+  } catch (err) {
+    naicsAddNote.textContent = err.message || 'Could not save. Please try again.';
+  } finally {
+    submitBtn.disabled = false;
+  }
 });
 
 // Window toggle buttons
