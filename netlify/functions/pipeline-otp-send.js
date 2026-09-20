@@ -29,19 +29,35 @@ async function getSubscription(email) {
   } catch { return null; }
 }
 
+async function getRfcpEntitlement(email) {
+  try {
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/product_entitlements?customer_email=eq.${encodeURIComponent(email)}&product_code=eq.ngcc&status=in.(trialing,active)&select=customer_email,status,trial_end,current_period_end,business_name&order=updated_at.desc&limit=1`,
+      { headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` } }
+    );
+    if (!res.ok) return null;
+    const rows = await res.json();
+    return Array.isArray(rows) && rows[0] ? rows[0] : null;
+  } catch { return null; }
+}
+
 async function isAllowed(email) {
   const sub = await getSubscription(email);
-  if (!sub) return false;
-  if (String(sub.status || '').toLowerCase() !== 'active') return false;
-
-  if (String(sub.plan_type || '').toLowerCase() === 'agency_30') {
-    const start = sub.updated_at ? new Date(sub.updated_at).getTime() : NaN;
-    if (!Number.isFinite(start)) return false;
-    const expires = start + AGENCY_ACCESS_DAYS * 24 * 60 * 60 * 1000;
-    return Date.now() < expires;
+  if (sub && String(sub.status || '').toLowerCase() === 'active') {
+    if (String(sub.plan_type || '').toLowerCase() === 'agency_30') {
+      const start = sub.updated_at ? new Date(sub.updated_at).getTime() : NaN;
+      if (!Number.isFinite(start)) return false;
+      const expires = start + AGENCY_ACCESS_DAYS * 24 * 60 * 60 * 1000;
+      return Date.now() < expires;
+    }
+    return true;
   }
 
-  return true;
+  // Stripe-managed RFCP trials/subscriptions are stored in product_entitlements.
+  // Accept those records so a new claimant can receive OTP before the legacy
+  // capgen_subscriptions profile row has been bootstrapped.
+  const entitlement = await getRfcpEntitlement(email);
+  return Boolean(entitlement);
 }
 
 function generateOTP() {
