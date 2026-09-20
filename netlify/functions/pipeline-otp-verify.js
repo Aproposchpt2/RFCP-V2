@@ -51,25 +51,67 @@ exports.handler = async (event) => {
 
   const lookupKey = SERVICE_KEY || ANON_KEY;
 
-  // Look up subscription
-  let isSubscriber = false;
-  let viewToken    = null;
-  let accountType  = 'subscriber';
-
+  // Bridge Stripe entitlement -> RFCP profile record on first verified login.
+  // This lets the Claim Your Vendor Name funnel use the existing first-run
+  // entity claim/profile workflow without creating a parallel account system.
+  let entitlement = null;
   try {
-    const subRes = await fetch(
-      `${SUPABASE_URL}/rest/v1/capgen_subscriptions?email=eq.${encodeURIComponent(email)}&select=demo_token&limit=1`,
+    const entRes = await fetch(
+      `${SUPABASE_URL}/rest/v1/product_entitlements?customer_email=eq.${encodeURIComponent(email)}&product_code=eq.ngcc&status=in.(trialing,active)&select=*&order=updated_at.desc&limit=1`,
       { headers: { apikey: lookupKey, Authorization: `Bearer ${lookupKey}` } }
     );
-    const subs = await subRes.json();
-    if (Array.isArray(subs) && subs[0]) {
-      isSubscriber = true;
-      viewToken    = subs[0].demo_token || null;
-    }
+    const ents = await entRes.json();
+    entitlement = Array.isArray(ents) && ents[0] ? ents[0] : null;
   } catch(e) { /* non-fatal */ }
 
+  let profileRow = null;
+  try {
+    const profileRes = await fetch(
+      `${SUPABASE_URL}/rest/v1/capgen_subscriptions?email=eq.${encodeURIComponent(email)}&select=*&limit=1`,
+      { headers: { apikey: lookupKey, Authorization: `Bearer ${lookupKey}` } }
+    );
+    const profiles = await profileRes.json();
+    profileRow = Array.isArray(profiles) && profiles[0] ? profiles[0] : null;
+  } catch(e) { /* non-fatal */ }
+
+  if (!profileRow && entitlement) {
+    const nameParts = String(entitlement.customer_name || '').trim().split(/\s+/).filter(Boolean);
+    const bootstrap = {
+      email,
+      first_name: nameParts[0] || null,
+      last_name: nameParts.length > 1 ? nameParts.slice(1).join(' ') : null,
+      business_name: entitlement.business_name || null,
+      plan_type: 'rfcp_trial',
+      status: 'active',
+      stripe_customer_id: entitlement.stripe_customer_id || null,
+      stripe_subscription_id: entitlement.stripe_subscription_id || null,
+      trial_ends_at: entitlement.trial_end || null,
+      trial_end: entitlement.trial_end || null,
+      current_period_start: entitlement.current_period_start || null,
+      current_period_end: entitlement.current_period_end || null,
+      onboarding_state: 'entity_pending',
+      payment_type: 'stripe',
+      updated_at: new Date().toISOString()
+    };
+    try {
+      const createRes = await fetch(`${SUPABASE_URL}/rest/v1/capgen_subscriptions`, {
+        method:'POST',
+        headers:{ apikey:lookupKey, Authorization:`Bearer ${lookupKey}`, 'Content-Type':'application/json', Prefer:'return=representation' },
+        body:JSON.stringify(bootstrap)
+      });
+      const created = await createRes.json();
+      if (createRes.ok && Array.isArray(created) && created[0]) profileRow = created[0];
+    } catch(e) { console.error('[verify] profile bootstrap failed:', e.message); }
+  }
+
+  // Resolve current RFCP access/profile state.
+  let isSubscriber = Boolean(profileRow || entitlement);
+  let viewToken    = profileRow?.demo_token || null;
+  let accountType  = entitlement ? 'rfcp_claim' : 'subscriber';
+  let onboardingState = profileRow?.onboarding_state || (entitlement ? 'entity_pending' : 'complete');
+
   // Look up snapshot for view_token + business identity
-  let uei = '', bizName = '';
+  let uei = profileRow?.uei || '', bizName = profileRow?.business_name || entitlement?.business_name || '';
   try {
     const snapRes = await fetch(
       `${SUPABASE_URL}/rest/v1/demo_snapshots?requester_email=eq.${encodeURIComponent(email)}&order=created_at.desc&limit=1&select=view_token,business_name,entity_uei,profile`,
@@ -112,7 +154,7 @@ exports.handler = async (event) => {
       email,
       uei,
       business_name:    bizName,
-      onboarding_state: 'complete',
+      onboarding_state: onboardingState,
       account_type:     accountType,
       view_token:       viewToken,
       is_subscriber:    isSubscriber,
