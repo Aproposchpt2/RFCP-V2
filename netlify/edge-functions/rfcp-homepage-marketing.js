@@ -12,11 +12,11 @@ export default async (request, context) => {
   // surfacing the language federal contractors and small businesses actually search.
   html = html.replace(
     '<title>Federal Contract Portal — Apropos Group LLC</title>',
-    '<title>Federal Contract Portal | Federal Contract Opportunities for Small Businesses | Apropos Group LLC</title>'
+    '<title>Federal Contract Portal | Government Contract Opportunities</title>'
   );
   html = html.replace(
     '<title>National Government Contract Center — Federal · Nevada · California</title>',
-    '<title>Federal Contract Portal | Federal Contract Opportunities for Small Businesses | Apropos Group LLC</title>'
+    '<title>Federal Contract Portal | Government Contract Opportunities</title>'
   );
   html = html.replace(
     '<meta name="description" content="Apropos Group LLC Federal Contract Portal — supporting economic growth by helping businesses participate more effectively in the government marketplace.">',
@@ -26,6 +26,49 @@ export default async (request, context) => {
     '<meta name="description" content="Your command center for government contract intelligence. Personalized opportunity dashboards for registered federal contractors and state contract seekers. Powered by AG ENGINEERING OS™.">',
     '<meta name="description" content="Federal Contract Portal helps federal contractors and small businesses discover government contract opportunities matched to their capabilities, evaluate fit, and focus on opportunities they are positioned to pursue.">'
   );
+
+  // Public homepage indexing signals. The portal has several legacy domain aliases,
+  // so the preferred federalcontractorportal hostname must be explicit.
+  const canonical = 'https://federalcontractorportal.aproposgroupllc.com/';
+  const seoGraph = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'Organization',
+        '@id': canonical + '#organization',
+        name: 'Apropos Group LLC',
+        url: 'https://aproposgroupllc.com/'
+      },
+      {
+        '@type': 'WebSite',
+        '@id': canonical + '#website',
+        name: 'Federal Contract Portal',
+        url: canonical,
+        publisher: { '@id': canonical + '#organization' },
+        inLanguage: 'en-US'
+      },
+      {
+        '@type': 'Service',
+        '@id': canonical + '#service',
+        name: 'Federal Contract Opportunity Intelligence',
+        serviceType: 'Federal contract opportunity discovery and fit analysis',
+        url: canonical,
+        provider: { '@id': canonical + '#organization' },
+        areaServed: { '@type': 'Country', name: 'United States' }
+      }
+    ]
+  };
+  const seoHead = [
+    '<meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1">',
+    '<link rel="canonical" href="' + canonical + '">',
+    '<meta property="og:type" content="website">',
+    '<meta property="og:site_name" content="Federal Contract Portal">',
+    '<meta property="og:title" content="Federal Contract Portal | Government Contract Opportunities">',
+    '<meta property="og:description" content="Discover government contract opportunities matched to your business capabilities, evaluate fit, and focus on federal pursuits positioned for success.">',
+    '<meta property="og:url" content="' + canonical + '">',
+    '<script type="application/ld+json">' + JSON.stringify(seoGraph) + '</script>'
+  ].join('\n');
+  html = html.replace('</head>', seoHead + '\n</head>');
 
   const start = html.indexOf('<!-- TWO PATH SECTION -->');
   const end = html.indexOf('<!-- PROOF STRIP -->');
