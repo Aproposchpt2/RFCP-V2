@@ -1,0 +1,32 @@
+# Federal Contract Portal
+
+> The Federal Contract Portal is an APROPOS Group LLC service that helps registered federal contractors find and evaluate government contract opportunities matched to their business capabilities.
+
+## Canonical information
+
+- Official URL: https://federalcontractorportal.aproposgroupllc.com/
+- Provider: APROPOS Group LLC
+- Provider website: https://aproposgroupllc.com/
+- Service area: United States
+- Audience: Registered federal contractors and small businesses pursuing federal opportunities
+- Not a government website or agency.
+
+## What the service does
+
+- Presents federal contract opportunities sourced from official public records
+- Matches opportunities to a contractor's business and capability profile
+- Provides fit scoring and bid/no-bid decision support
+- Supports opportunity review and proposal-development workflows
+- Refreshes opportunity intelligence regularly
+
+## Important limitations
+
+The portal provides private-sector business intelligence and decision support. Users must verify deadlines, eligibility, set-aside status, and solicitation requirements with the authoritative issuing agency. APROPOS Group LLC does not guarantee eligibility, proposal success, or contract awards.
+
+## Related official resources
+
+- Corporate site: https://aproposgroupllc.com/
+- Corporate capabilities: https://aproposgroupllc.com/capabilities
+- Corporate contact: https://aproposgroupllc.com/contact
+- State and local opportunity intelligence: https://natcorp.aproposgroupllc.com/
+- Business intelligence marketplace: https://marketplace.aproposgroupllc.com/
