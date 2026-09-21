@@ -1,6 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-KMZ7QVXGP3"></script>
+<script>
+  window.dataLayer=window.dataLayer||[];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js',new Date());
+  gtag('config','G-KMZ7QVXGP3');
+</script>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>National Government Contract Center — Federal · Nevada · California</title>
@@ -384,6 +393,22 @@ var stateHero = document.getElementById('stateHeroCta');
 if(stateHero) stateHero.addEventListener('click', scrollToState);
 var stateBtn = document.querySelector('.path-btn.state-btn');
 if(stateBtn) stateBtn.addEventListener('click', scrollToState);
+</script>
+
+<script>
+(function(){
+  document.addEventListener('click',function(event){
+    var link=event.target.closest&&event.target.closest('a[href]');
+    if(!link||typeof window.gtag!=='function')return;
+    var href=link.getAttribute('href')||'';
+    var text=(link.textContent||'').trim().replace(/\\s+/g,' ').slice(0,100);
+    if(href.indexOf('/onboarding')===0){
+      gtag('event','contact_intent',{intent:'federal_dashboard_access',link_text:text,source_page:location.pathname,transport_type:'beacon'});
+    }else if(/nevadastategen|calstategen/i.test(href)){
+      gtag('event','select_content',{content_type:'state_contract_platform',item_id:/nevada/i.test(href)?'nevada':'california',link_url:href,transport_type:'beacon'});
+    }
+  },true);
+})();
 </script>
 </body>
 </html>
