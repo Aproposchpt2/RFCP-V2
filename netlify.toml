@@ -59,8 +59,8 @@
 
 [[redirects]]
   from = "/offer"
-  to = "https://ai4-product-purchasing.ai4businesses.org/capgen-offer.html"
-  status = 301
+  to = "https://buy.stripe.com/4gMaEW67E1qf3cTdzi7EQ1t"
+  status = 302
   force = true
 
 [[redirects]]
