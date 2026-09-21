@@ -28,8 +28,8 @@ export default async (request, context) => {
   );
 
   // Public homepage indexing signals. The portal has several legacy domain aliases,
-  // so the preferred federalcontractorportal hostname must be explicit.
-  const canonical = 'https://federalcontractorportal.aproposgroupllc.com/';
+  // so the Netlify primary rfcp hostname must be explicit.
+  const canonical = 'https://rfcp.aproposgroupllc.com/';
   const seoGraph = {
     '@context': 'https://schema.org',
     '@graph': [
