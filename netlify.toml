@@ -59,7 +59,7 @@
 
 [[redirects]]
   from = "/offer"
-  to = "https://ai4-product-purchasing.ai4businesses.org/capgen-offer.html"
+  to = "https://ai4-product-purchasing.ai4businesses.org/rfcp"
   status = 301
   force = true
 
