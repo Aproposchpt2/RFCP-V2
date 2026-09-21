@@ -247,9 +247,9 @@ footer span{color:rgba(255,255,255,.45)}
         Every open government contract opportunity — matched to your business, scored for fit, delivered in a personalized dashboard. Pursue only the contracts your business can actually win.
       </p>
       <div class="hero-ctas">
-        <a href="/onboarding" class="hero-cta-pill hero-cta-primary">
+        <a href="/offer" class="hero-cta-pill hero-cta-primary">
           <span class="hcp-dot"></span>
-          Registered Federal Government Contractors
+          Start 14-Day Free Trial · Then $39.99/Month
           <span class="hcp-arrow">→</span>
         </a>
         <a href="#state-options" class="hero-cta-pill hero-cta-secondary" id="stateHeroCta">
@@ -286,12 +286,12 @@ footer span{color:rgba(255,255,255,.45)}
         <div class="path-features">
           <div class="path-feat">Personalized opportunity dashboard</div>
           <div class="path-feat">NAICS-matched contracts only</div>
-          <div class="path-feat">AI Fit Scoring on every opportunity</div>
-          <div class="path-feat">Bid/no-bid intelligence built in</div>
-          <div class="path-feat">Proposal development included</div>
+          <div class="path-feat">Plain-language opportunity summaries</div>
+          <div class="path-feat">Official solicitation and package links</div>
+          <div class="path-feat">Saved opportunities and pursuit organization</div>
         </div>
-        <a href="/onboarding" class="path-btn federal-btn">Access My Federal Dashboard →</a>
-        <div class="path-note">Sourced from official public records. Updated daily.</div>
+        <a href="/offer" class="path-btn federal-btn">Start My 14-Day Free Trial →</a>
+        <div class="path-note">$0 today. Then $39.99/month. Payment method required. Analyze Fit sold separately.</div>
       </div>
 
       <!-- STATE PATH -->
@@ -402,7 +402,9 @@ if(stateBtn) stateBtn.addEventListener('click', scrollToState);
     if(!link||typeof window.gtag!=='function')return;
     var href=link.getAttribute('href')||'';
     var text=(link.textContent||'').trim().replace(/\\s+/g,' ').slice(0,100);
-    if(href.indexOf('/onboarding')===0){
+    if(href.indexOf('/offer')===0){
+      gtag('event','begin_checkout',{currency:'USD',value:39.99,items:[{item_id:'rfcp-membership',item_name:'RFCP Membership',price:39.99,quantity:1}]});
+    }else if(href.indexOf('/onboarding')===0){
       gtag('event','contact_intent',{intent:'federal_dashboard_access',link_text:text,source_page:location.pathname,transport_type:'beacon'});
     }else if(/nevadastategen|calstategen/i.test(href)){
       gtag('event','select_content',{content_type:'state_contract_platform',item_id:/nevada/i.test(href)?'nevada':'california',link_url:href,transport_type:'beacon'});
