@@ -4,7 +4,7 @@
 
 ## Canonical information
 
-- Official URL: https://federalcontractorportal.aproposgroupllc.com/
+- Official URL: https://rfcp.aproposgroupllc.com/
 - Provider: APROPOS Group LLC
 - Provider website: https://aproposgroupllc.com/
 - Service area: United States
