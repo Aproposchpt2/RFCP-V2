@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>CapGen Pro — Complete Your Setup</title>
+<title>Registered Federal Contractors Portal — Complete Your Setup</title>
 <style>
 :root{--bg:#0A1A3A;--surface:#0f2244;--line:rgba(91,175,255,.15);--line2:rgba(91,175,255,.32);--text:#f0f6ff;--muted:#8facd0;--soft:#5a7899;--cyan:#5BD3FF;--green:#2ecc8a;font-family:Arial,Helvetica,sans-serif;}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -35,12 +35,12 @@ footer{margin-top:28px;font-size:.74rem;color:var(--soft)}
 </head>
 <body>
 <div class="card">
-  <div class="logo"><div class="logo-mark">CG</div><div class="logo-name">CapGen Pro</div></div>
+  <div class="logo"><div class="logo-mark">RF</div><div class="logo-name">Registered Federal Contractors Portal</div></div>
 
   <div id="form-view">
-    <div class="eyebrow">Payment Confirmed</div>
+    <div class="eyebrow">14-Day Trial Activated</div>
     <h1>Complete your setup</h1>
-    <p class="sub">Tell us about your business. We'll pull your SAM.gov data and have your pipeline ready within 24 hours.</p>
+    <p class="sub">Complete your RFCP business profile. We’ll verify your SAM.gov registration and prepare your federal opportunity dashboard.</p>
 
     <form id="setupForm" novalidate>
       <div class="field-row">
@@ -65,22 +65,21 @@ footer{margin-top:28px;font-size:.74rem;color:var(--soft)}
         <label for="phone">Phone Number <span class="opt">(optional)</span></label>
         <input id="phone" type="tel" placeholder="(702) 555-0100" autocomplete="tel"/>
       </div>
-      <button class="btn" type="submit" id="submitBtn">Build My Pipeline →</button>
+      <button class="btn" type="submit" id="submitBtn">Create My RFCP Profile →</button>
     </form>
     <div class="notice" id="notice"></div>
   </div>
 
   <div class="success" id="success-view">
     <span class="success-icon">🚀</span>
-    <h2 style="font-size:1.4rem;font-weight:900;margin-bottom:10px">You're all set!</h2>
+    <h2 style="font-size:1.4rem;font-weight:900;margin-bottom:10px">Your RFCP profile is ready.</h2>
     <p style="color:var(--muted);font-size:.92rem;line-height:1.7;margin-bottom:20px">
-      We're pulling your SAM.gov data and building your pipeline now.<br/>
-      Check your email — your onboarding steps are on their way.
+      Continue directly to secure email verification to open your federal opportunity dashboard.
     </p>
-    <a href="/onboarding.html" style="display:block;background:var(--cyan);color:#0A1A3A;border-radius:10px;padding:14px;font-weight:700;text-decoration:none;text-align:center">Go to My Dashboard →</a>
+    <a href="/onboarding.html" style="display:block;background:var(--cyan);color:#0A1A3A;border-radius:10px;padding:14px;font-weight:700;text-decoration:none;text-align:center">Continue to Secure Verification →</a>
   </div>
 </div>
-<footer>CapGen Pro · AI4 Businesses · Apropos Group LLC</footer>
+<footer>Registered Federal Contractors Portal · Apropos Group LLC</footer>
 
 <script>
 'use strict';
@@ -117,10 +116,13 @@ document.getElementById('setupForm').addEventListener('submit', async function(e
     if (!res.ok) throw new Error(data.error || 'Setup failed.');
     document.getElementById('form-view').style.display = 'none';
     document.getElementById('success-view').style.display = 'block';
+    const verifyLink = document.querySelector('#success-view a');
+    if (verifyLink) verifyLink.href = '/onboarding?email=' + encodeURIComponent(email);
+    setTimeout(() => { window.location.assign('/onboarding?email=' + encodeURIComponent(email)); }, 1200);
   } catch(err) {
     notice.className = 'notice err'; notice.style.display = 'block';
     notice.textContent = err.message || 'Something went wrong. Please try again.';
-    btn.disabled = false; btn.textContent = 'Build My Pipeline →';
+    btn.disabled = false; btn.textContent = 'Create My RFCP Profile →';
   }
 });
 </script>
