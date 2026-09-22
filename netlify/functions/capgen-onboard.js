@@ -12,6 +12,7 @@ const RESEND_KEY    = process.env.RESEND_API_KEY;
 const FROM_EMAIL    = process.env.RESEND_FROM_EMAIL || 'alerts@aproposgroupllc.com';
 const SAM_API_KEY   = process.env.SAM_API_KEY;
 const SITE_URL      = 'https://rfcp.aproposgroupllc.com';
+const crypto        = require('crypto');
 
 const headers = {
   'Access-Control-Allow-Origin': '*',
@@ -128,10 +129,13 @@ exports.handler = async (event) => {
   try { body = JSON.parse(event.body || '{}'); }
   catch { return { statusCode: 400, headers, body: JSON.stringify({ error: 'Invalid JSON' }) }; }
 
-  const { first_name, last_name, business_name, email, phone, plan_type = 'monthly', plan_amount } = body;
-  if (!first_name || !last_name || !business_name || !email) {
-    return { statusCode: 400, headers, body: JSON.stringify({ error: 'First name, last name, business name, and email are required.' }) };
+  const { full_name, business_name, email, plan_type = 'rfcp_trial', plan_amount } = body;
+  if (!full_name || !business_name || !email) {
+    return { statusCode: 400, headers, body: JSON.stringify({ error: 'Name, business name, and email are required.' }) };
   }
+  const nameParts = String(full_name).trim().split(/\s+/);
+  const first_name = nameParts.shift();
+  const last_name = nameParts.join(' ') || null;
 
   console.log(`RFCP onboard: ${business_name} <${email}> plan=${plan_type}`);
 
@@ -145,21 +149,29 @@ exports.handler = async (event) => {
   // 3. Save subscription record
   const record = {
     email: email.toLowerCase().trim(),
-    first_name, last_name, business_name, phone: phone || null,
+    first_name, last_name, business_name,
     plan_type, plan_amount: plan_amount || null,
-    status: 'active',
+    status: 'trial',
+    trial_ends_at: new Date(Date.now() + 14 * 86400000).toISOString(),
+    trial_end: new Date(Date.now() + 14 * 86400000).toISOString(),
+    current_period_start: new Date().toISOString(),
+    current_period_end: new Date(Date.now() + 14 * 86400000).toISOString(),
+    payment_type: 'free_trial',
     updated_at: new Date().toISOString(),
     supabase_user_id: userId || null,
     ...(sam || {}),
   };
   await upsertSubscription(record);
 
-  // 4. Send welcome email
-  await sendWelcomeEmail(email, first_name, business_name);
+  const sessionToken = crypto.randomUUID();
+  if (SERVICE_KEY) await fetch(`${SUPABASE_URL}/rest/v1/client_sessions`, {
+    method: 'POST', headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ session_token: sessionToken, email: record.email, business_name, account_type: 'rfcp_trial', expires_at: record.trial_ends_at }),
+  });
 
   return {
     statusCode: 200,
     headers,
-    body: JSON.stringify({ ok: true, uei: sam?.uei || null, naics: sam?.naics || [] }),
+    body: JSON.stringify({ ok: true, session_token: sessionToken, trial_ends_at: record.trial_ends_at, uei: sam?.uei || null, naics: sam?.naics || [] }),
   };
 };

@@ -146,7 +146,7 @@ export default async (request, context) => {
     <h2>Find the opportunities that deserve your attention.</h2>
     <p>Start with your business. See a focused opportunity dashboard. Use Analyze Fit when you need deeper pursuit intelligence.</p>
     <div class="rfcp-close-actions">
-      <a href="/onboarding" class="rfcp-close-primary">START FREE 14 DAY TRIAL <span aria-hidden="true">→</span></a>
+      <a href="/welcome" class="rfcp-close-primary">START FREE 14 DAY TRIAL <span aria-hidden="true">→</span></a>
       <a href="/onboarding" class="rfcp-close-secondary">MEMBER LOGIN</a>
     </div>
   </div>

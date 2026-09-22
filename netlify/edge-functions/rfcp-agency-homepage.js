@@ -84,7 +84,7 @@ export default async (request, context) => {
       </div>
       <div class="rfcp-hero-start">
         <div class="rfcp-hero-start-label">GET STARTED</div>
-        <a href="/onboarding" class="rfcp-trial-pill">FREE 14 DAY TRIAL <span aria-hidden="true">→</span></a>
+        <a href="/welcome" class="rfcp-trial-pill">FREE 14 DAY TRIAL <span aria-hidden="true">→</span></a>
       </div>
     </div>`;
 

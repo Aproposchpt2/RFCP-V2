@@ -38,21 +38,12 @@ footer{margin-top:28px;font-size:.74rem;color:var(--soft)}
   <div class="logo"><div class="logo-mark">RF</div><div class="logo-name">Registered Federal Contractors Portal</div></div>
 
   <div id="form-view">
-    <div class="eyebrow">14-Day Trial Activated</div>
-    <h1>Complete your setup</h1>
-    <p class="sub">Complete your RFCP business profile. We’ll verify your SAM.gov registration and prepare your federal opportunity dashboard.</p>
+    <div class="eyebrow">Start Your 14-Day Free Trial</div>
+    <h1>Enter RFCP in three fields.</h1>
+    <p class="sub">No payment method or email code is required to begin. Submit your business identity and open the federal opportunity portal immediately.</p>
 
     <form id="setupForm" novalidate>
-      <div class="field-row">
-        <div class="field" style="margin-bottom:16px">
-          <label for="firstName">First Name</label>
-          <input id="firstName" type="text" placeholder="Lori" required autocomplete="given-name"/>
-        </div>
-        <div class="field" style="margin-bottom:16px">
-          <label for="lastName">Last Name</label>
-          <input id="lastName" type="text" placeholder="Johnson" required autocomplete="family-name"/>
-        </div>
-      </div>
+      <div class="field"><label for="fullName">Name</label><input id="fullName" type="text" placeholder="Lori Johnson" required autocomplete="name"/></div>
       <div class="field">
         <label for="bizName">Business Name <span class="opt">(exactly as registered in SAM.gov)</span></label>
         <input id="bizName" type="text" placeholder="Custom IT Services LLC" required autocomplete="organization"/>
@@ -61,11 +52,7 @@ footer{margin-top:28px;font-size:.74rem;color:var(--soft)}
         <label for="email">Email Address</label>
         <input id="email" type="email" placeholder="you@yourbusiness.com" required autocomplete="email"/>
       </div>
-      <div class="field">
-        <label for="phone">Phone Number <span class="opt">(optional)</span></label>
-        <input id="phone" type="tel" placeholder="(702) 555-0100" autocomplete="tel"/>
-      </div>
-      <button class="btn" type="submit" id="submitBtn">Create My RFCP Profile →</button>
+      <button class="btn" type="submit" id="submitBtn">Submit &amp; Enter RFCP →</button>
     </form>
     <div class="notice" id="notice"></div>
   </div>
@@ -92,13 +79,11 @@ document.getElementById('setupForm').addEventListener('submit', async function(e
   e.preventDefault();
   const btn     = document.getElementById('submitBtn');
   const notice  = document.getElementById('notice');
-  const fn      = document.getElementById('firstName').value.trim();
-  const ln      = document.getElementById('lastName').value.trim();
+  const fullName = document.getElementById('fullName').value.trim();
   const biz     = document.getElementById('bizName').value.trim();
   const email   = document.getElementById('email').value.trim();
-  const phone   = document.getElementById('phone').value.trim();
 
-  if (!fn || !ln || !biz || !email) {
+  if (!fullName || !biz || !email) {
     notice.className = 'notice err'; notice.style.display = 'block';
     notice.textContent = 'Please complete all required fields.'; return;
   }
@@ -110,19 +95,19 @@ document.getElementById('setupForm').addEventListener('submit', async function(e
     const res = await fetch('/.netlify/functions/capgen-onboard', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ first_name: fn, last_name: ln, business_name: biz, email, phone, plan_type: planType, plan_amount: planAmt }),
+      body: JSON.stringify({ full_name: fullName, business_name: biz, email, plan_type: planType, plan_amount: planAmt }),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Setup failed.');
-    document.getElementById('form-view').style.display = 'none';
-    document.getElementById('success-view').style.display = 'block';
-    const verifyLink = document.querySelector('#success-view a');
-    if (verifyLink) verifyLink.href = '/onboarding?email=' + encodeURIComponent(email);
-    setTimeout(() => { window.location.assign('/onboarding?email=' + encodeURIComponent(email)); }, 1200);
+    const session = { email, business_name: biz, account_type: 'rfcp_trial', trial_ends_at: data.trial_ends_at };
+    localStorage.setItem('capgen_session', JSON.stringify(session));
+    sessionStorage.setItem('capgen_session', JSON.stringify(session));
+    if (data.session_token) { localStorage.setItem('pipeline_session', data.session_token); sessionStorage.setItem('pipeline_session', data.session_token); }
+    window.location.assign('/apropos');
   } catch(err) {
     notice.className = 'notice err'; notice.style.display = 'block';
     notice.textContent = err.message || 'Something went wrong. Please try again.';
-    btn.disabled = false; btn.textContent = 'Create My RFCP Profile →';
+    btn.disabled = false; btn.textContent = 'Submit & Enter RFCP →';
   }
 });
 </script>
