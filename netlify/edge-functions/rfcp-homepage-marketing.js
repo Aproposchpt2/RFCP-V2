@@ -135,7 +135,6 @@ export default async (request, context) => {
     <div class="rfcp-agency-body">
       <p>Business Development Centers, economic-development organizations and community business-support agencies already help entrepreneurs prepare, compete and grow. Federal Contract Portal can extend that work by giving appropriate businesses a direct pathway from capability to relevant federal opportunity.</p>
       <p>The platform is designed to complement—not replace—the trusted guidance these organizations provide. Partner access creates another practical resource agencies can introduce to businesses that are ready to explore the federal marketplace.</p>
-      <button type="button" class="rfcp-agency-story-cta" id="rfcp-story-agency-open">AGENCY ACCESS <span aria-hidden="true">→</span></button>
     </div>
   </div>
 </section>
@@ -182,8 +181,6 @@ export default async (request, context) => {
 .rfcp-agency-grid{display:grid;grid-template-columns:.9fr 1.1fr;gap:clamp(3rem,8vw,8rem);align-items:start}
 .rfcp-agency-body{padding-top:.5rem}
 .rfcp-agency-body p{font-size:1rem;line-height:1.84;color:rgba(255,255,255,.62);margin-bottom:1.15rem}
-.rfcp-agency-story-cta{margin-top:1rem;border:1px solid rgba(213,170,77,.55);background:rgba(213,170,77,.08);color:#E8C982;border-radius:999px;padding:.82rem 1.5rem;font-family:var(--body);font-size:.7rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;transition:.2s}
-.rfcp-agency-story-cta:hover{background:rgba(213,170,77,.16);transform:translateY(-2px)}
 .rfcp-close{padding:clamp(5rem,9vw,7rem) 0;background:linear-gradient(120deg,#06162f 0%,#0F2A6A 100%);border-top:1px solid rgba(213,170,77,.2);text-align:center}
 .rfcp-close-inner{max-width:900px}
 .rfcp-close p{max-width:700px;margin:1.25rem auto 0;color:rgba(255,255,255,.62);font-size:1rem;line-height:1.8}
@@ -196,17 +193,6 @@ export default async (request, context) => {
 </style>`;
 
   html = html.replace('</head>', css + '\n</head>');
-
-  // Reuse the existing agency-access modal from the homepage enhancement.
-  const bridge = `
-<script id="rfcp-homepage-marketing-script">
-document.addEventListener('DOMContentLoaded',function(){
-  var story=document.getElementById('rfcp-story-agency-open');
-  var primary=document.getElementById('rfcp-home-agency-open');
-  if(story&&primary)story.addEventListener('click',function(){primary.click();});
-});
-</script>`;
-  html = html.replace('</body>', bridge + '\n</body>');
 
   return new Response(html, { status: response.status, statusText: response.statusText, headers: response.headers });
 };

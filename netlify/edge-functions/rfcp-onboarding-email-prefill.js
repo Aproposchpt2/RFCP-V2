@@ -4,7 +4,7 @@ export default async (request, context) => {
   if (!contentType.includes('text/html')) return response;
 
   let html = await response.text();
-  if (!html.includes('<title>NGCC — Member Access</title>')) {
+  if (!html.includes('<title>Federal Contract Portal — Member Access</title>')) {
     return new Response(html, {
       status: response.status,
       statusText: response.statusText,

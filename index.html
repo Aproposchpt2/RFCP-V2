@@ -12,8 +12,8 @@
 
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>National Government Contract Center — Federal · Nevada · California</title>
-<meta name="description" content="Your command center for government contract intelligence. Personalized opportunity dashboards for registered federal contractors and state contract seekers. Powered by AG ENGINEERING OS™.">
+<title>Federal Contract Portal | Government Contract Opportunities</title>
+<meta name="description" content="Federal Contract Portal helps federal contractors and small businesses discover government contract opportunities matched to their capabilities, evaluate fit, and focus on opportunities they are positioned to pursue.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,500;0,6..96,700;1,6..96,400;1,6..96,500&family=Cormorant:ital,wght@0,500;1,400;1,500;1,600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -65,7 +65,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;opa
     url('/headquarters.webp');
   background-size:cover;background-position:center right;background-repeat:no-repeat;
   padding:clamp(3rem,6vh,5rem) 0}
-.hero::after{content:'NGCC';position:absolute;bottom:-3rem;right:2vw;
+.hero::after{content:'FCP';position:absolute;bottom:-3rem;right:2vw;
   font-family:var(--sub);font-style:italic;font-size:clamp(12rem,22vw,22rem);
   color:rgba(255,255,255,.025);line-height:1;pointer-events:none;user-select:none}
 .hero-content{position:relative;z-index:2;max-width:660px}
@@ -207,6 +207,19 @@ footer span{color:rgba(255,255,255,.45)}
 .hcp-dot-state{background:#34d399}
 .hero-cta-primary .hcp-dot{background:var(--ink)}
 .hcp-arrow{margin-left:auto;opacity:.6;font-size:.9rem}
+
+/* ── Mission hero (Federal Contract Portal) ── */
+.rfcp-mission-hero{max-width:760px}
+.rfcp-mission-hero .hero-h1{max-width:760px;margin-bottom:.7rem}
+.rfcp-mission-tagline{color:rgba(232,201,130,.92);font-style:normal;font-weight:500;letter-spacing:.015em;margin-bottom:1.3rem}
+.rfcp-mission-copy{max-width:690px;color:rgba(255,255,255,.72);font-size:clamp(.9rem,1.1vw,1rem);line-height:1.68}
+.rfcp-mission-copy p{margin:0 0 .85rem}
+.rfcp-mission-copy .rfcp-mission-close{font-family:var(--sub);font-size:clamp(1.15rem,1.8vw,1.45rem);font-style:italic;color:#fff;margin-top:1.2rem;margin-bottom:0}
+.rfcp-hero-start{margin-top:1.65rem;display:flex;flex-direction:column;align-items:flex-start;gap:.55rem}
+.rfcp-hero-start-label{font-size:.6rem;letter-spacing:.22em;text-transform:uppercase;color:rgba(232,201,130,.78);font-weight:700}
+.rfcp-trial-pill{display:inline-flex;align-items:center;justify-content:center;gap:.75rem;padding:.82rem 1.55rem;border-radius:999px;background:var(--white);color:var(--ink);font-family:var(--body);font-size:.76rem;font-weight:800;letter-spacing:.13em;text-transform:uppercase;text-decoration:none;box-shadow:0 10px 30px rgba(0,0,0,.25);transition:transform .2s,box-shadow .2s,background .2s}
+.rfcp-trial-pill:hover{transform:translateY(-2px);background:var(--mist);box-shadow:0 14px 34px rgba(0,0,0,.32)}
+@media(max-width:620px){.rfcp-mission-copy{font-size:.9rem;line-height:1.6}.rfcp-mission-copy p{margin-bottom:.7rem}.rfcp-mission-tagline{font-size:1.05rem}.rfcp-trial-pill{font-size:.68rem;padding:.75rem 1.25rem}}
 </style>
 </head>
 <body>
@@ -215,10 +228,10 @@ footer span{color:rgba(255,255,255,.45)}
 <header class="top">
   <div class="top-in">
     <a class="logo" href="/">
-      <div class="logo-mark">NG</div>
+      <div class="logo-mark">FCP</div>
       <div>
-        <div class="logo-name">NGCC</div>
-        <div class="logo-sub">National Government Contract Center</div>
+        <div class="logo-name">Federal Contract Portal</div>
+        <div class="logo-sub">Operated by Apropos Group LLC</div>
       </div>
     </a>
     <nav class="nav-links">
@@ -233,30 +246,22 @@ footer span{color:rgba(255,255,255,.45)}
 <!-- HERO -->
 <section class="hero">
   <div class="wrap">
-    <div class="hero-content">
+    <div class="hero-content rfcp-mission-hero">
       <div class="hero-eye">
         <div class="eye-line"></div>
-        <span class="eye-text">Apropos Group LLC · Government Contract Intelligence</span>
+        <span class="eye-text">APROPOS GROUP LLC</span>
       </div>
-      <h1 class="hero-h1">
-        National Government<br>Contract Center
-        <em>Federal. Nevada. California.</em>
-      </h1>
-      <div class="hero-sub">Your command center for government contract intelligence.</div>
-      <p class="hero-copy">
-        Every open government contract opportunity — matched to your business, scored for fit, delivered in a personalized dashboard. Pursue only the contracts your business can actually win.
-      </p>
-      <div class="hero-ctas">
-        <a href="/welcome" class="hero-cta-pill hero-cta-primary">
-          <span class="hcp-dot"></span>
-          Registered Federal Government Contractors
-          <span class="hcp-arrow">→</span>
-        </a>
-        <a href="#state-options" class="hero-cta-pill hero-cta-secondary" id="stateHeroCta">
-          <span class="hcp-dot hcp-dot-state"></span>
-          All State Licensed Businesses
-          <span class="hcp-arrow">→</span>
-        </a>
+      <h1 class="hero-h1">Federal Contract Portal</h1>
+      <div class="hero-sub rfcp-mission-tagline">Opportunity Builds Business. Business Builds Community.</div>
+      <div class="rfcp-mission-copy">
+        <p>Apropos Group LLC is committed to supporting economic growth by helping businesses participate more effectively in the government marketplace.</p>
+        <p>When government contracts are fulfilled by qualified businesses, those businesses have an opportunity to grow, strengthen their capabilities, create jobs, and contribute to the economic vitality of the communities they serve.</p>
+        <p>When people gain access to meaningful employment, greater financial stability, and new opportunities for advancement, families become stronger and communities become more resilient.</p>
+        <p class="rfcp-mission-close">Businesses grow. People prosper. Communities become stronger.</p>
+      </div>
+      <div class="rfcp-hero-start">
+        <div class="rfcp-hero-start-label">GET STARTED</div>
+        <a href="/welcome" class="rfcp-trial-pill">FREE 14 DAY TRIAL <span aria-hidden="true">→</span></a>
       </div>
     </div>
   </div>
@@ -377,7 +382,7 @@ footer span{color:rgba(255,255,255,.45)}
 <footer>
   <div class="wrap">
     <p>
-      <span>NGCC · National Government Contract Center</span> &nbsp;·&nbsp;
+      <span>Federal Contract Portal · Operated by Apropos Group LLC</span> &nbsp;·&nbsp;
       <span>© 2026 Apropos Group LLC. All rights reserved.</span> &nbsp;·&nbsp;
       <a href="/privacy" style="color:inherit;text-decoration:underline">Privacy</a> &nbsp;·&nbsp;
       <a href="/terms" style="color:inherit;text-decoration:underline">Terms</a>

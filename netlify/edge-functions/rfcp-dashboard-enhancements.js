@@ -4,7 +4,7 @@ export default async function handler(request, context) {
   if (!contentType.includes('text/html')) return response;
 
   let html = await response.text();
-  if (!html.includes('<title>Opportunity Pipeline — NGCC</title>')) {
+  if (!html.includes('<title>Opportunity Pipeline — Federal Contract Portal</title>')) {
     return new Response(html, {
       status: response.status,
       statusText: response.statusText,
@@ -21,52 +21,14 @@ export default async function handler(request, context) {
 
   const css = `
 <style id="rfcp-dashboard-enhancement-css">
-  .agency-login-btn{background:linear-gradient(135deg,#d9a45b,#f0cf79);color:#081a38;border:none;border-radius:8px;padding:8px 14px;font-size:.72rem;font-weight:900;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;white-space:nowrap;box-shadow:0 0 0 1px rgba(217,164,91,.2)}
-  .agency-login-btn:hover{filter:brightness(1.06)}
-  #agency-auth-cta{position:fixed;top:18px;right:18px;z-index:1002}
   .rfcp-extra-filter{min-width:135px}
   .rfcp-date-input{width:145px;min-width:130px}
   .rfcp-sortable{cursor:pointer;user-select:none;transition:.15s}
   .rfcp-sortable:hover{color:var(--cyan);background:rgba(91,211,255,.07)}
   .rfcp-sort-arrow{color:var(--cyan);margin-left:4px;font-size:.7rem}
   .rfcp-state-chip{display:inline-block;padding:2px 8px;border-radius:4px;font-size:.66rem;font-weight:700;background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.22);color:#6ee7b7}
-  #rfcp-agency-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.62);z-index:1100;align-items:center;justify-content:center;padding:20px}
-  #rfcp-agency-overlay.open{display:flex}
-  .rfcp-agency-card{width:min(540px,100%);max-height:92vh;overflow:auto;background:#0f2244;border:1px solid rgba(91,211,255,.24);border-radius:18px;padding:28px;box-shadow:0 32px 90px rgba(0,0,0,.5);position:relative}
-  .rfcp-agency-close{position:absolute;top:14px;right:14px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);color:#fff;border-radius:8px;width:34px;height:34px;cursor:pointer}
-  .rfcp-agency-eye{font-size:.62rem;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:var(--cyan);margin-bottom:8px}
-  .rfcp-agency-title{font-family:'Bodoni Moda',serif;font-size:1.7rem;color:#fff;font-weight:500;line-height:1.15;margin:0 36px 8px 0}
-  .rfcp-agency-sub{font-size:.84rem;color:var(--muted);margin-bottom:20px;line-height:1.6}
-  .rfcp-agency-field{margin-bottom:13px}
-  .rfcp-agency-field label{display:block;font-size:.62rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--soft);margin-bottom:5px}
-  .rfcp-agency-field input{width:100%;background:rgba(255,255,255,.06);border:1px solid var(--line2);border-radius:9px;color:#fff;padding:11px 12px;font:inherit;outline:none}
-  .rfcp-agency-field input:focus{border-color:var(--cyan)}
-  .rfcp-agency-submit{width:100%;margin-top:4px;background:var(--cyan);color:#06172f;border:none;border-radius:9px;padding:12px 16px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;cursor:pointer}
-  .rfcp-agency-submit:disabled{opacity:.55;cursor:wait}
-  #rfcp-agency-msg{min-height:20px;margin-top:11px;font-size:.82rem;text-align:center;color:var(--muted)}
-  #rfcp-agency-msg.ok{color:var(--green)}
-  #rfcp-agency-msg.err{color:#ff8a8a}
-  @media(max-width:700px){#agency-auth-cta{top:10px;right:10px}.agency-login-btn{padding:7px 10px;font-size:.65rem}.rfcp-date-input{width:100%;min-width:0}.rfcp-extra-filter{min-width:0;flex:1}.controls>.ctrl-select,.controls>.ctrl-input{flex:1 1 150px}}
+  @media(max-width:700px){.rfcp-date-input{width:100%;min-width:0}.rfcp-extra-filter{min-width:0;flex:1}.controls>.ctrl-select,.controls>.ctrl-input{flex:1 1 150px}}
 </style>`;
-
-  const modal = `
-<div id="rfcp-agency-overlay" role="dialog" aria-modal="true" aria-labelledby="rfcp-agency-title">
-  <div class="rfcp-agency-card">
-    <button type="button" class="rfcp-agency-close" id="rfcp-agency-close" aria-label="Close agency login">✕</button>
-    <div class="rfcp-agency-eye">RFCP Agency Access</div>
-    <h2 class="rfcp-agency-title" id="rfcp-agency-title">Agency Login</h2>
-    <p class="rfcp-agency-sub">Enter the agency and business information associated with your access request.</p>
-    <form id="rfcp-agency-form" novalidate>
-      <div class="rfcp-agency-field"><label for="rfcp-agency-name">Name</label><input id="rfcp-agency-name" name="name" type="text" autocomplete="name" required></div>
-      <div class="rfcp-agency-field"><label for="rfcp-agency-agency">Agency Name</label><input id="rfcp-agency-agency" name="agency_name" type="text" autocomplete="organization" required></div>
-      <div class="rfcp-agency-field"><label for="rfcp-agency-business">Business Name</label><input id="rfcp-agency-business" name="business_name" type="text" required></div>
-      <div class="rfcp-agency-field"><label for="rfcp-agency-email">Business Email</label><input id="rfcp-agency-email" name="business_email" type="email" autocomplete="email" required></div>
-      <div class="rfcp-agency-field"><label for="rfcp-agency-promo">Promo Code</label><input id="rfcp-agency-promo" name="promo_code" type="text" autocomplete="off" placeholder="Enter your promo code" required></div>
-      <button class="rfcp-agency-submit" type="submit" id="rfcp-agency-submit">Submit Agency Access</button>
-      <div id="rfcp-agency-msg" aria-live="polite"></div>
-    </form>
-  </div>
-</div>`;
 
   const script = `
 <script id="rfcp-dashboard-enhancement-script">
@@ -114,47 +76,6 @@ export default async function handler(request, context) {
   var tabs=document.querySelector('nav.mkt-tabs'); if(tabs) tabs.remove();
   var nv=$('panel-nevada'), ca=$('panel-california'); if(nv) nv.style.display='none'; if(ca) ca.style.display='none';
   var fed=$('panel-federal'); if(fed) fed.style.display='';
-
-  // Agency login is available both before member authentication and in the
-  // authenticated header. Promo submission never bypasses business auth.
-  // Redirects to the homepage's own agency modal (?agency=1 auto-opens it)
-  // instead of opening the local copy below -- that copy predates today's
-  // SAM.gov rework (still sends business_email, no website field, no
-  // picker, no session-landing) and would now always fail server-side
-  // since website became a hard requirement. Rather than duplicate all of
-  // that logic a second time here, forever, one real implementation.
-  function openAgency(){ window.location.assign('/?agency=1'); }
-  function closeAgency(){ var el=$('rfcp-agency-overlay'); if(el) el.classList.remove('open'); }
-  var headerRight=document.querySelector('.header-right');
-  if(headerRight && !$('agency-login-header')){
-    var hb=document.createElement('button'); hb.type='button'; hb.id='agency-login-header'; hb.className='agency-login-btn'; hb.textContent='AGENCY LOGIN'; hb.addEventListener('click',openAgency); headerRight.insertBefore(hb,headerRight.firstChild);
-  }
-  var authGate=$('auth-gate');
-  if(authGate && !$('agency-auth-cta')){
-    var ab=document.createElement('button'); ab.type='button'; ab.id='agency-auth-cta'; ab.className='agency-login-btn'; ab.textContent='AGENCY LOGIN'; ab.addEventListener('click',openAgency); authGate.appendChild(ab);
-  }
-  var closeBtn=$('rfcp-agency-close'); if(closeBtn) closeBtn.addEventListener('click',closeAgency);
-  var overlay=$('rfcp-agency-overlay'); if(overlay) overlay.addEventListener('click',function(e){if(e.target===overlay)closeAgency();});
-  document.addEventListener('keydown',function(e){if(e.key==='Escape')closeAgency();});
-
-  var agencyForm=$('rfcp-agency-form');
-  if(agencyForm){ agencyForm.addEventListener('submit',function(e){
-    e.preventDefault();
-    var msg=$('rfcp-agency-msg'), submit=$('rfcp-agency-submit');
-    msg.className=''; msg.textContent='';
-    var payload={
-      name:$('rfcp-agency-name').value.trim(), agency_name:$('rfcp-agency-agency').value.trim(),
-      business_name:$('rfcp-agency-business').value.trim(), business_email:$('rfcp-agency-email').value.trim().toLowerCase(),
-      promo_code:$('rfcp-agency-promo').value.trim()
-    };
-    if(!payload.name||!payload.agency_name||!payload.business_name||!payload.business_email||!payload.promo_code){msg.className='err';msg.textContent='Complete all fields.';return;}
-    submit.disabled=true; submit.textContent='Submitting…';
-    fetch('/.netlify/functions/agency-access-intake',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
-      .then(function(r){return r.json().then(function(j){return {ok:r.ok,j:j};});})
-      .then(function(res){if(!res.ok)throw new Error(res.j&&res.j.error||'Agency access request failed.');msg.className='ok';msg.textContent='Agency access request received.';})
-      .catch(function(err){msg.className='err';msg.textContent=err.message;})
-      .finally(function(){submit.disabled=false;submit.textContent='Submit Agency Access';});
-  });}
 
   var controls=document.querySelector('#panel-federal .controls');
   var setAside=$('fed-setaside');
@@ -266,7 +187,7 @@ export default async function handler(request, context) {
 </script>`;
 
   html = html.replace('</head>', css + '\n</head>');
-  html = html.replace('</body>', modal + '\n' + script + '\n</body>');
+  html = html.replace('</body>', script + '\n</body>');
 
   return new Response(html, {
     status: response.status,
